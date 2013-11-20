@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html>
+<head>{include="includes"}
+<style>
+    * {
+        -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+        -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+        box-sizing: border-box;         /* Opera/IE 8+ */
+    }
+    html{
+        height:100%;
+        font-size:14px;
+        font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;
+    }
+    body{
+        margin:0;
+        padding:0;
+        height:100%;
+        background-color: rgb(231,231,231);
+    }
+    #editlinkform::-moz-placeholder{
+        font-family: Source Code Pro,Monaco,Andale Mono,Consolas,monospace;
+        font-size: 14px;
+    }
+
+    #editlinkform textarea::-moz-selection, #editlinkform input::-moz-selection {
+        background: rgb(64, 99, 99);
+        color:#fff;
+    }
+
+    #editlinkform{
+        float:left;
+        position:relative;
+        width:50%;
+        max-width:40em;
+        background-color: rgb(46, 50, 55);
+        padding:20px;
+        height:100%;
+        overflow:auto;
+    }
+    input.tagstyle{
+        width:auto;
+        background-color: transparent;
+        border:none;
+        color:rgb(220,220,220);
+        float:left;
+        margin:5px 2px;
+        height:20px;
+    }
+    input.normal{
+        width:100%;
+        margin:20px 0;
+        padding:5px 7px;
+        background-color: rgb(40, 44, 51);
+        box-shadow: inset 0px 0px 5px 0px rgb(11, 21, 31); 
+        border:none;
+        color:rgb(220,220,220);
+        height:38px;
+    }
+    #dropbox{
+        position:relative;
+    }
+    #fileInfo{
+        margin:-20px 0 20px 0;
+        box-shadow: 0px 0px 10px 0px rgb(11, 21, 31); 
+        width:100%;
+        background-color:rgb(202, 203, 192);
+        display: block;
+        color:rgb(123, 124, 102);
+    }
+    #fileInfo:after{
+        display:block;
+        content:"";
+        clear:both;
+    }
+    #fileInfo input{
+        color:rgb(96, 97, 79);
+        border:none;
+        background-color: transparent;
+        margin-left:20px;
+        width:200px;
+        font-weight:bold;
+    }
+    #fileInfo > span{
+        margin-right: 20px;
+        padding:0 10px;
+        line-height: 34px;
+        float:left;
+    }
+    #fileInfo a{
+        text-decoration:none;
+        font-size:12px;
+        font-weight:bold;
+        position: relative;
+        top: -1px;
+        margin-left: 8px;
+        padding: 2px 0 2px 4px;
+        position:absolute;
+        right: 6px;
+        color:rgb(96, 97, 79);
+    }
+    #description{
+        height:448px;
+    }
+    #dropbox.drag textarea{
+        border:8px dashed rgb(71, 71, 71);
+        background-color: rgb(46, 50, 55);
+        box-shadow: inset 0px 0px 0px 0px rgb(11, 21, 31);
+    }
+    textarea{
+        font-family: Source Code Pro,Monaco,Andale Mono,Consolas,monospace;
+        font-size:14px;
+        width:100%;
+        padding:0;
+        height:500px;
+        max-height:500px;
+        resize:none;
+        display: block;
+        border:none;
+        color:rgb(220,220,220);
+        padding: 10px;
+        background-color: rgb(40, 44, 51);
+        box-shadow: inset 0px 0px 10px -2px rgb(11, 21, 31);
+        border-color:rgb(48,48,48);
+        transition-property:box-shadow, background-color, border-color;
+        transition-duration: 0.3s; 
+    }
+
+    .tagbox{
+        margin:20px 0;
+        padding:5px;
+        background-color: rgb(40, 44, 51);
+        box-shadow: inset 0px 0px 5px 0px rgb(11, 21, 31);
+        border:none;
+        color:rgb(220,220,220);
+    }
+    .tagbox:after{
+        display:block;
+        content:"";
+        clear:both;
+    }
+    .tagbox > span{
+        padding:2px 5px 3px 5px;
+        margin:2px;
+        float:left;
+        box-shadow:0px 0px 2px rgb(11, 21, 31);
+        border-radius: 4px;
+        position:relative;
+    }
+    .tagbox span span{
+        margin-right: 20px;
+        display: block;
+    }
+    .tagbox a{
+        text-decoration:none;
+        font-size:11px;
+        font-weight:bold;
+        position: relative;
+        top: 0px;
+        margin-left: 8px;
+        padding: 2px 0 2px 4px;
+        position:absolute;
+        right: 6px;
+        height: 100%;
+    }
+
+    #tagbox > span{
+        background-color: rgb(32,103,180);
+        color: rgb(200, 200, 255);
+        border: 1px solid rgb(32,49,119);
+    }
+    #tagbox a{
+        color: rgb(20, 34, 50);
+        border-left: 1px dotted rgb(20, 34, 50);
+    }
+    #shapebox > span{
+        background-color: rgb(180,75,32);
+        color: rgb(255, 200, 200);
+        border: 1px solid rgb(119,49,32);
+    }
+    #shapebox a{
+        color: rgb(50, 34, 20);
+        border-left: 1px dotted rgb(50, 34, 20);
+    }
+
+
+    /* CHECKBOX */
+    .group {
+        color:#AAA;
+        margin: 30px 50px 30px 0;
+        float:left;
+    }
+    .group input:not(:checked), .group input:checked { /*style applied only for recent browser*/
+        position:absolute;
+        left:-9999px;
+    }
+
+    .group input:not(:checked) + label, .group input:checked + label { 
+        position:relative;
+        padding-left: 80px;
+        cursor: pointer;
+    }
+    /* aspect chekbox */
+    .group input:not(:checked)+ label:before, .group input:checked + label:before { 
+        content:'';
+        position: absolute;
+        left:0; top: -10px;
+        width: 70px; height:36px;
+        border-radius: 18px;
+        background-color: rgb(40, 44, 51);
+        box-shadow: inset 0px 0px 5px 0px rgb(11,21,31);
+        transition: background-color .2s; 
+    }
+    .group input:not(:checked)+ label:after, .group input:checked + label:after {
+        content:'';
+        position: absolute;
+        left:10px; top: -2px;
+        width: 20px; height:20px;
+        border-radius: 10px;
+        background-color: rgb(31, 34, 40);
+        box-shadow: 0px 0px 5px 0px rgb(1,1,1); 
+        transition: all .2s;
+    }
+    .group input:checked + label:before{
+        background-color:  rgb(30, 34, 40);
+    }    
+    .group input:checked + label:after{
+        background-color: rgb(32,180,103);
+        left:42px;
+    } 
+    .group input:checked + label .ui, .group input:not(:checked) + label .ui:before, .group input:checked + label .ui:after {
+        position: absolute;
+        left: 6px;
+        width: 65px;
+        font-weight: bold;
+        font-height: 15px;
+        transition: all .2s;
+    }
+    .group input:not(:checked) + label .ui:before {
+        content: "no";
+        left:38px;
+    }
+    .group input:checked + label .ui:after {
+        content: "yes";
+        color: rgb(32,180,103);
+    }
+    .buttonWrapper{
+        width:50%;
+        float:left;
+        padding:0 5px;
+        margin-bottom:20px;
+    }
+
+    button{
+        font-family: Source Code Pro,Monaco,Andale Mono,Consolas,monospace;
+        font-size:15px;
+        font-weight: bold;
+        cursor: pointer;
+        width:100%;
+        padding:10px;
+        border:none;
+        background-color: rgb(52, 59, 68);
+        color: rgb(151, 160, 168);
+        box-shadow: 0px 0px 5px 0px rgb(11,21,31); 
+    }
+
+    #send:hover {
+        background-color: rgb(32,180,103);
+        color: rgb(14, 80, 42);
+    }
+    #analyse:hover {
+        background-color: rgb(32,180,103);
+        color: rgb(14, 80, 42);
+    }
+    #preview:hover {
+        background-color: rgb(32,180,103);
+        color: rgb(14, 80, 42);
+    }
+    button:hover{
+        box-shadow: 0px 0px 10px 2px rgb(21, 21, 21);         
+    }
+
+    #rest {
+        float:left;
+        font-family: verdana,helvetica,sans-serif;
+        width:50%;
+        max-width:40em;
+        padding:20px;
+    }
+
+    .post h1{
+        text-transform:uppercase;
+        font-size:20px;
+        line-height:32px;
+        padding:3px;
+        margin:0;
+    }
+    .post p{
+        margin:0;
+    }
+
+</style>
+<style>
+@font-face {
+    font-family: 'snicklesregular';
+    src: url('tpl/font/snickles-webfont.eot');
+    src: url('tpl/font/snickles-webfont.eot?#iefix') format('embedded-opentype'),
+         url('tpl/font/snickles-webfont.woff') format('woff'),
+         url('tpl/font/snickles-webfont.ttf') format('truetype'),
+         url('tpl/font/snickles-webfont.svg#snicklesregular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+#pageheader h1{
+    font-family: "snicklesregular";
+    text-align: right;
+    letter-spacing: 0.15em;
+    margin:0;
+    padding:0;
+}
+
+#pageheader span {
+    margin:10px;
+    position: relative;
+    top:-5px;
+}
+
+#pageheader a {
+    text-decoration: none;
+    color:#FFF;
+    opacity:0.8;
+}
+
+#pageheader a:hover {
+    opacity:1;
+}
+
+
+</style>
+</head>
+<body>
+
+<div id="editlinkform">
+    <div id="pageheader">
+        <h1><a href="?"><span>puffblob</span><img src="img/logo-w.svg" height="40"/></a></h1>
+    </div>
+
+    <input class="normal" placeholder="Title..." name="title" id="title">
+    <div id="dropbox">
+        <span id="fileInfo"></span>
+        <textarea id="content" placeholder="Write, copy an URL or drop a file here ..."></textarea>
+        <textarea id="description" placeholder="Write a description here ..."></textarea>
+    </div>
+    <div class="tagbox" id="tagbox">
+        <input class="tagstyle" placeholder="Add tag ..." name="tags" id="tags">
+    </div>
+    <div class="tagbox" id="shapebox">
+        <input class="tagstyle" placeholder="Add shape ..." name="shapes" id="shapes">
+    </div>
+    <div class="group" id="privacyGroup">
+        <input type="checkbox" name="privacy" value ="privacy" id="privacy">
+        <label for="privacy"><span class="ui"></span>Private</label>
+    </div>
+    <div class="group" id="bookmarkGroup">
+        <input type="checkbox" name="bookmark" value ="bookmark" id="bookmark">
+        <label for="bookmark" id="bookmarkLabel"><span class="ui"></span>Bookmark</label>
+    </div>
+    <div style="clear:both"></div>
+    <input type="hidden" value="keywords" name="keywords" id="keywords">
+    <input type="hidden" value="lang" name="lang" id="lang">    
+    <div class="buttonWrapper"><button id="preview">Preview</button></div>
+    <div class="buttonWrapper">
+        <button id="analyse">Analyse</button>
+        <button id="send">Send</button>
+    </div>
+</div>
+<div id="rest">
+    <div id="result"></div>
+    <div class="post" id="previewBlock"></div>
+</div>
+</body>
+    <script>
+
+//____________________________________
+// Focus on title on load
+    document.getElementById("title").focus();
+
+//____________________________________
+// check if URL is first thing in Content
+
+    var urlRegexp = /^\s*((?:ht|f)tps?):\/\/([a-zA-Z0-9\._]+)([\/a-zA-Z0-9\._]+)*\s*$/;
+    var urlInText = /\b((?:ht|f)tps?):\/\/([a-zA-Z0-9\._]+)([\/a-zA-Z0-9\._]+)*\b/;
+
+    var hasURL = "{$contentType}" === 'url';
+    if(hasURL) {
+        document.getElementById("content").onkeyup = function() {
+            var text = this.value;
+            if(urlRegexp.test(text) && !hasURL) {
+                hasURL = true;
+                this.className = "";
+            } else if (!urlRegexp.test(text) && hasURL) {
+                hasURL = false;
+                this.className = "invalid";
+            }
+        }
+    } else {
+        document.getElementById("content").onkeyup = checkIfContentBookmark;
+    }
+
+    document.getElementById("bookmarkLabel").onclick = function (evt) {
+        if(document.getElementById("bookmark").checked) {
+            isNotBookmark();
+        } else {
+            if(data.meta.contentType === "file") {
+                removeFile();
+            }
+            isBookmark();
+        }
+    };
+
+    function checkIfContentBookmark(evt) {
+        var text = this.value;
+
+        if(urlRegexp.test(text) && !hasURL) {
+            hasURL = true;
+            isBookmark();
+            document.getElementById("bookmark").checked = true;
+        } else if (!urlRegexp.test(text) && hasURL) {
+            hasURL = false;
+            isNotBookmark();
+            document.getElementById("bookmark").checked = false;
+        }
+    }
+
+    function chekIfValidURL() {
+        var text = this.value;
+        if(urlRegexp.test(text) && !hasURL) {
+            hasURL = true;
+            this.className = "";
+        } else if (!urlRegexp.test(text) && hasURL) {
+            hasURL = false;
+            this.className = "invalid";
+        }
+    }
+
+    function isNotBookmark() {
+        document.getElementById("description").style.display = "none";
+        var description = document.getElementById("description").value;
+        document.getElementById("description").value = "";
+        var content = document.getElementById("content").value; 
+        document.getElementById("content").value = content + "\n" + description;
+        document.getElementById("content").style.height = "500px";
+        document.getElementById("content").onkeyup = checkIfContentBookmark;
+        data.meta.contentType = "text";
+    }
+
+    function isBookmark() {
+        document.getElementById("content").style.height = "auto";
+        document.getElementById("description").style.display = "block";
+        var content = document.getElementById("content").value;
+        var urls = content.match(urlInText);
+        var url = (urls !== null) ? urls[0] : "";
+        var description = content.replace(urlInText, "");
+        document.getElementById("content").value = url;
+        document.getElementById("content").onkeyup = chekIfValidURL; 
+        document.getElementById("description").value = description.replace(/^\s*/, "");
+        data.meta.contentType = "url";
+    }
+
+//____________________________________
+// Render preview
+        window.onkeydown = function(evt) {
+            if((evt.wich ||evt.keyCode) === 13 && evt.ctrlKey) {
+                renderPreview();
+            }
+        };
+
+        document.getElementById("preview").addEventListener('click', renderPreview, false);
+
+        function renderPreview() {
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "index.php", true);
+            xhr.onreadystatechange = function(evt) {
+                if(xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 0)) {
+                    document.getElementById("previewBlock").innerHTML = xhr.responseText;
+                }
+            }
+
+            var previewForm = new FormData();
+            previewForm.append('text', document.getElementById("content").value + document.getElementById("description").value);
+            previewForm.append('preview', '');
+            xhr.send(previewForm);
+        }
+
+//____________________________________
+// making tag input
+
+        function makeTagInput(inputID, wrapperID) {
+            var input = document.getElementById(inputID);
+            var wrapper = document.getElementById(wrapperID);
+            wrapper.onclick = function() {
+                input.focus();
+            }
+            var taglist = {};
+            var tagid = 0;
+            input.addEventListener("keydown", function (evt) {
+                if((evt.wich ||evt.keyCode) === 13) { // press enter
+                    var tag = input.value;
+
+                    var intag = document.createElement("span");
+                    intag.innerHTML = tag;
+
+                    var deltag = document.createElement("a");
+                    deltag.setAttribute("href", "#");
+                    deltag.setAttribute("data-tagid", tagid+"");
+                    deltag.innerHTML = "x";
+                    deltag.onclick = function(evt) {
+                        evt.preventDefault();
+                        var id = this.getAttribute("data-tagid");
+                        console.log('span[data-tagid="'+id+'"]');
+                        var selecttag = wrapper.querySelector('span[data-tagid="'+id+'"]');
+                        wrapper.removeChild(selecttag);
+                        delete taglist[id];
+                    }
+
+                    var spantag = document.createElement("span");
+                    spantag.setAttribute("data-tagid", tagid+"");
+                    spantag.appendChild(intag);
+                    spantag.appendChild(deltag);
+
+                    taglist[tagid] = tag;
+                    tagid++;
+
+                    wrapper.insertBefore(spantag, input);
+                    input.value = "";
+
+                    evt.preventDefault();
+                }
+                if(input.value === "" && tagid > 0) {
+                    if((evt.which || evt.keyCode) === 8) { // press backspace
+                        // deleting the tag just before the input
+                        var nothingToRemove = false;
+                        while(true) { 
+                            tagid--;
+                            var lastTag = taglist[tagid];
+                            if(typeof lastTag !== "undefined") {
+                                delete taglist[tagid];                            
+                                break;
+                            }
+                            if(tagid === 0) {
+                                nothingToRemove = true;
+                                break;
+                            }
+                        }
+                        if(!nothingToRemove) {
+                            var selecttag = wrapper.querySelector('span[data-tagid="'+tagid+'"]');
+                            wrapper.removeChild(selecttag);
+                            input.value = lastTag;
+                        }
+                        evt.preventDefault();
+                    }
+                }
+            }, false);
+        }
+
+        makeTagInput("tags", "tagbox");
+        makeTagInput("shapes", "shapebox");
+
+        function getTags(wrapperID) {
+            var wrapper = document.getElementById(wrapperID);
+            var alltags = wrapper.querySelectorAll("span span");
+            var tags = [];
+            for (var i = 0; i<alltags.length; i++) {
+                var tag = alltags[i];
+                tags.push(tag.innerHTML);
+            }
+            return tags;
+        }
+
+//____________________________________
+// post analyse request 
+
+        var analyse = document.getElementById("analyse");
+
+        analyse.addEventListener("click", function(){
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "index.php", true);
+            xhr.onreadystatechange = function(evt) {
+                if(xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 0)) {
+                    console.log(xhr.responseText);
+                    var analysis = JSON.parse(xhr.responseText);
+                    data.meta.keywords = analysis.keywords;
+                    data.meta.lang = analysis.lang;
+                    send.style.display = "block";
+                }
+            }
+            var analyseForm = new FormData();
+            analyseForm.append('text', document.getElementById("content").value +  document.getElementById("description").value);
+            analyseForm.append('analyse', '');
+            xhr.send(analyseForm);
+            analyse.style.display = "none";
+
+        }, false);
+
+//____________________________________
+// post send request 
+
+        var formData = new FormData();
+        var data = {
+            //for database
+            title : "",
+            date : "",
+            editHistory : [],
+            content : "",
+            description :"",
+            privacy : "",
+            shapes : "",
+            meta: {
+                contentType : "text",
+                filename : "",
+                tags : "",
+                keywords : "",
+                filesize : "",
+                lang : "",
+            },
+            //for security and application.
+            keepoldfile : "false",
+            oldfile : "",
+            token : "{$token}",
+        }
+
+        /*formData.append('contentType', 'text');
+        formData.append('keepoldfile', "false");
+        formData.append('oldfile', "");
+        formData.append('filename', "");
+        formData.append('filesize', "");*/
+
+        var send = document.getElementById("send");
+        send.style.display = "none";
+
+        send.addEventListener("click", function(){
+            data.title = document.getElementById("title").value;
+            if(document.getElementById("filename")) {
+                data.meta.filename = document.getElementById("filename").value;
+            }
+            if(hasURL) {
+                data.meta.contentType = "url";
+            }
+            data.content = document.getElementById("content").value;
+            data.description = document.getElementById("description").value;
+            //data.meta.lang = document.getElementById("lang").value;
+            data.meta.tags = getTags("tagbox");
+            //data.meta.keywords = document.getElementById("keywords").value;
+            data.date = Date.now() + "";
+            data.shapes = getTags("shapebox");
+            data.editHistory = [Date.now() + ""];
+            data.privacy = document.getElementById("privacy").checked ? "private" : "public";
+
+            /*formData.append('title', document.getElementById("title").value);
+            if(document.getElementById("filename")) {
+                formData.append('filename', document.getElementById("filename").value);
+            }
+            formData.append('content', document.getElementById("content").value);
+            formData.append('description', document.getElementById("description").value);
+            formData.append('lang', document.getElementById("lang").value);
+            formData.append('tags', JSON.stringify(getTags("tagbox")));
+            formData.append('keywords', document.getElementById("keywords").value);
+            formData.append('shapes', JSON.stringify(getTags("shapebox")));
+            formData.append('date', Date.now() + "");
+            formData.append('editHistory',"[" + Date.now() + "]");
+            formData.append('privacy', document.getElementById("privacy").checked ? "private" : "public");
+            formData.append('token', "{$token}");*/
+            formData.append('post', "");
+            formData.append('data', JSON.stringify(data));
+
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "index.php", true);
+            xhr.onreadystatechange = function (evt) {
+                if (xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 0)) {
+                    document.getElementById("result").innerHTML = xhr.responseText;
+                    if (/<script>(.*)<\/script>/.test(xhr.responseText)) {
+                        var script = xhr.responseText.replace(/<script>(.*)<\/script>/, "$1");
+                        console.log(script);
+                        eval(script);
+                    }
+                }
+            }
+            xhr.send(formData);
+
+        }, false);
+
+//____________________________________
+// drag & drop 
+
+        document.getElementById("description").style.display = "none";
+        var dropbox = document.getElementById("dropbox");
+        dropbox.addEventListener("dragenter", dragEnter, false);
+        dropbox.addEventListener("dragexit", dragExit, false);
+        dropbox.addEventListener("dragover", prevDef, false);
+        dropbox.addEventListener("drop", drop, false);
+
+        function dragEnter(evt) {
+            this.className = "drag";
+            prevDef(evt);
+        }
+
+        function dragExit(evt) {
+            this.className = "";
+            prevDef(evt);
+        }
+
+        function prevDef (evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
+        }
+
+        function drop (evt) {
+            this.className = "";
+            prevDef(evt);
+
+            var files = evt.dataTransfer.files;
+            var count = files.length;
+
+            if(count > 0) {
+                handleFiles(files)
+            }
+        }
+
+        function addFile(file) {
+            document.getElementById("fileInfo").innerHTML = '<span><span>(' + humanSize(file.size) + ')</span><input id="filename" value="' + file.name + '" placeholder="Type a filename ..."/></span><a id="remove" href="#" title="remove">x</a>';                
+            var content = document.getElementById("content").value;
+            document.getElementById("content").style.display = "none";
+            document.getElementById("content").style.height = "500px";
+            document.getElementById("description").style.display = "block";
+            var description = document.getElementById("description").value;
+            document.getElementById("description").value = content + "\n" + description;
+            document.getElementById("content").value = "";
+            document.getElementById("bookmark").checked = false;
+        }
+
+        function removeFile() {
+            document.getElementById("fileInfo").innerHTML = "";
+            document.getElementById("content").style.display = "block";
+            document.getElementById("description").style.display = "none";
+            document.getElementById("content").value = document.getElementById("description").value;
+            document.getElementById("description").value = "";
+
+            analyse.style.display = "block";
+            send.style.display = "none";
+
+            data.meta.contentType = "text";
+            //formData.append('contentType', 'text');
+            formData.append('file', "");
+            data.meta.filesize = "";
+            data.meta.filename = "";
+        }
+
+        function handleFiles (files) {
+            var file = files[0];
+
+            addFile(file);
+            formData.append('file', file);
+            data.meta.filesize =  file.size;
+            data.meta.filesize =  file.name;
+            data.meta.contentType = "file";
+
+            document.getElementById("remove").onclick = function (evt) {
+                removeFile();
+            }
+        }
+
+//____________________________________
+// misc 
+
+        function getDateString() {
+            var d = new Date();
+            var dateString = d.getFullYear() + "";
+            dateString += ((d.getMonth() < 10) ? '0' : '') + d.getMonth() + "";
+            dateString += ((d.getDate() < 10) ? '0' : '') + d.getDate() + "";
+            var timeString = ((d.getHours() < 10) ? '0' : '') + d.getHours() + "";
+            timeString += ((d.getMinutes() < 10) ? '0' : '') + d.getMinutes() + "";
+            timeString += ((d.getSeconds() < 10) ? '0' : '') + d.getSeconds() + "";
+            return dateString + "_" + timeString;
+        }
+
+        function humanSize(size) {
+            var expf = Math.log(size)/Math.log(10)/3;
+            var exp = Math.floor(expf);
+            if(expf - exp < 0.333) { // if 9.000 => 9000 o, if 10.000 => 10 Ko
+                exp--;
+            } 
+            var value = Math.round(size/Math.pow(1000, exp)) + "";
+            var unit = ["o", "Ko", "Mo", "Go"];
+            if(value.length === 4) {
+                value = value.slice(0,1) + " " + value.slice(1);
+            }
+            return value + " " + unit[exp];
+        }
+
+    </script>
+</html>
