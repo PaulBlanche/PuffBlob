@@ -187,7 +187,7 @@
     /* CHECKBOX */
     .group {
         color:#AAA;
-        margin: 30px 50px 30px 0;
+        margin: 10px 50px 50px 0px;
         float:left;
     }
     .group input:not(:checked), .group input:checked { /*style applied only for recent browser*/
@@ -343,7 +343,7 @@
 
 <div id="editlinkform">
     <div id="pageheader">
-        <h1><a href="?"><span>puffblob</span><img src="img/logo-w.svg" height="40"/></a></h1>
+        <h1><a href="?"><span>puffblob</span><img src="tpl/img/logo-w.svg" height="40"/></a></h1>
     </div>
 
     <input class="normal" placeholder="Title..." name="title" id="title">
@@ -389,24 +389,11 @@
 //____________________________________
 // check if URL is first thing in Content
 
-    var urlRegexp = /^\s*((?:ht|f)tps?):\/\/([a-zA-Z0-9\._]+)([\/a-zA-Z0-9\._]+)*\s*$/;
-    var urlInText = /\b((?:ht|f)tps?):\/\/([a-zA-Z0-9\._]+)([\/a-zA-Z0-9\._]+)*\b/;
+    var urlRegexp = /^\s*((?:ht|f)tps?|magnet):\/\/([a-zA-Z0-9\._]+)([\/a-zA-Z0-9\._]+)*\s*$/;
+    var urlInText = /\b((?:ht|f)tps?|magnet):\/\/([a-zA-Z0-9\._]+)([\/a-zA-Z0-9\._]+)*\b/;
 
-    var hasURL = "{$contentType}" === 'url';
-    if(hasURL) {
-        document.getElementById("content").onkeyup = function() {
-            var text = this.value;
-            if(urlRegexp.test(text) && !hasURL) {
-                hasURL = true;
-                this.className = "";
-            } else if (!urlRegexp.test(text) && hasURL) {
-                hasURL = false;
-                this.className = "invalid";
-            }
-        }
-    } else {
-        document.getElementById("content").onkeyup = checkIfContentBookmark;
-    }
+    var hasURL = false;
+    document.getElementById("content").onkeyup = checkIfContentBookmark;
 
     document.getElementById("bookmarkLabel").onclick = function (evt) {
         if(document.getElementById("bookmark").checked) {
@@ -589,6 +576,7 @@
             xhr.onreadystatechange = function(evt) {
                 if(xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 0)) {
                     console.log(xhr.responseText);
+                    document.getElementById("previewBlock").innerHTML = xhr.responseText;
                     var analysis = JSON.parse(xhr.responseText);
                     data.meta.keywords = analysis.keywords;
                     data.meta.lang = analysis.lang;
@@ -596,7 +584,13 @@
                 }
             }
             var analyseForm = new FormData();
-            analyseForm.append('text', document.getElementById("content").value +  document.getElementById("description").value);
+            analyseForm.append('text', document.getElementById("content").value + " " + document.getElementById("description").value);
+            analyseForm.append('tags', JSON.stringify(getTags("tagbox")));
+            analyseForm.append('title', document.getElementById("title").value);
+            analyseForm.append('filename', "");
+            if(document.getElementById("filename")) {
+                analyseForm.append('filename', document.getElementById("filename").value);
+            }
             analyseForm.append('analyse', '');
             xhr.send(analyseForm);
             analyse.style.display = "none";

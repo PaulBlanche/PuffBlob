@@ -6,7 +6,7 @@ date_default_timezone_set('UTC');
 $GLOBALS["config"]["DATABASE"] = "data/database.php";
 $GLOBALS["config"]["BAYES"] = "data/bayes.php";
 $GLOBALS["config"]["LANG"] = "data/lang.php";
-$GLOBALS['config']['POSTS_PER_PAGE'] = 20; // Default links per page.
+$GLOBALS['config']['POSTS_PER_PAGE'] = 3; // Default links per page.
 $GLOBALS['config']['CONF_FILE'] = "data/config.php"; // Default links per page.
 $GLOBALS['config']['IPBANS_FILENAME'] = 'data/ipbans.php'; // File storage for failures and bans.
 $GLOBALS['config']['BAN_AFTER'] = 4;        // Ban IP after this many failures.
@@ -33,7 +33,7 @@ $GLOBALS["mime"] = array(
     "" => "",
 );
 
-$GLOBALS['config']['display'] = array(
+$GLOBALS['config']['display'] = array( // display => shapes
     "blog" => array("blog", "all"), 
     "galerie" => array("wallpaper", "screenshot_minecraft"),
     "links" => array("shaarli")
@@ -72,7 +72,7 @@ if (session_id() == '') {
     session_start();  // Start session if needed (Some server auto-start sessions).
 }
 
-define('UNLIKELY', 0.0000000001); 
+define('UNLIKELY', 0.01); 
 
 include "inc/rain.tpl.class.php"; //include Rain TPL
 raintpl::$tpl_dir = "tpl/"; // template directory
@@ -273,7 +273,12 @@ class postDB implements Iterator, Countable, ArrayAccess {
         return false;
     }
 
+
     public function filterShape($shape) {
+        if($shape === "all") {
+            return $this->posts;
+        }
+
         $filtered = array();
         foreach($this->posts as $date=>$post) {
             $shapes = $post["shapes"];
@@ -294,6 +299,7 @@ class postDB implements Iterator, Countable, ArrayAccess {
         return $filtered;
     }
 
+    // for keywords
     public function randomTextPost($length) {
         $textdata = $this->filterTextData();
         $shuffle = array();
@@ -415,6 +421,10 @@ class lang {
             $string = substr($content, strlen(PHPPRE),-strlen(PHPSUF));
             $this->unserialize($string);
         }
+    }
+
+    public function isempty() {
+        return (count($this->trigramIndex) + count($this->languageCount)) === 0 ;
     }
 }
 
@@ -557,15 +567,13 @@ class bayesianClassifier {
         return $lnProb;
     }
 
-    public function teach($text, $cls) {
-        $tokens = tokenize($text);
+    public function teach($tokens, $cls) {
         foreach ($tokens as $token) {
             $this->teachWord($token, $cls);
         }
     }
 
-    public function guess($text) {
-        $tokens = tokenize($text);
+    public function guess($tokens) {
         $probSum = 0;
         $classes = array();
         foreach($this->classes as $cls => $wordlist) {
@@ -574,48 +582,148 @@ class bayesianClassifier {
             $classes["$prob"] = $cls; 
         }
         krsort($classes);
-        return $classes;
+        $final = array();
+        foreach($classes as $prob => $cls) {
+            $final[] = array(
+                "prob" => floatval($prob),
+                "cls" => $cls
+            );
+        }
+        return $final;
     }
 
-    private function serialize() {
+    public function serialize() {
         $data = array(
             "words" => $this->words,
             "classes" => $this->classes
         );
         $serialized = serialize($data);
-        $compressed = gzdeflate($words);
+        $compressed = gzdeflate($serialized);
         return base64_encode($compressed);
     }
 
-    private function unserialize($string) {
+    public function unserialize($string) {
         $compressed = base64_decode($string);
         $serialized = gzinflate($compressed);
         $data = unserialize($serialized);
         $this->words = $data['words']; 
         $this->classes = $data['classes']; 
     }
+}
 
-    /*public function save() {
+class shapeClassifier {
+    /*private $tagsClassifier;
+    private $keywordClassifier;
+    private $rawTextClassifier;*/
+    private $classifierArray = array();
+    private $fields = array("tags", "keywords", "rawText", "mimeType");
+
+    public function init() {
+        /*$this->tagsClassifier = new bayesianClassifier;
+        $this->keywordClassifier = new bayesianClassifier;
+        $this->rawTextClassifier = new bayesianClassifier;*/
+        foreach ($this->fields as $field) {
+            $this->classifierArray[$field] = new bayesianClassifier;
+        }
+    }
+
+    public function teach(/*$tags, $keywords, $tokenRawText*/ $data, $shapes) {
+        foreach($shapes as $shape) {
+            /*$this->tagsClassifier->teach($tags, $shape);
+            $this->keywordClassifier->teach($keywords, $shape);
+            $this->rawTextClassifier->teach($tokenRawText, $shape);*/
+            foreach($this->fields as $field) {
+                $this->classifierArray[$field]->teach($data[$field], $shape);
+            }
+        }
+    }
+
+    public function guess(/*$tags, $keywords, $tokenRawText*/ $data) {
+        /*$clasTag = $this->tagsClassifier->guess($tags);
+        $clasKeywords = $this->keywordClassifier->guess($keywords);
+        $clasRawTexts = $this->rawTextClassifier->guess($tokenRawText);*/
+
+        foreach($this->fields as $field) {
+            $clas[$field] = $this->classifierArray[$field]->guess($data[$field]);
+        }
+
+        $allClas = call_user_func_array("array_merge", $clas);
+        //var_dump($allClas);
+        $shapesList = array();
+        $shapes = array();
+        foreach($allClas as $clas){
+            if(!in_array($clas['cls'], $shapes)) {
+                $shapesList[] = $clas['cls'];
+                $shapes[$clas['cls']] = array();
+            } 
+            $shapes[$clas['cls']][] = $clas['prob'];
+        }
+        $finalShape = array();
+        foreach ($shapes as $shape => $probList) {
+            $prob = $this->calcFromProbList($probList);
+            $finalShape["$prob"] = $shape;
+        }
+        krsort($finalShape);
+        $orderShape = array();
+        foreach($finalShape as $prob => $shape) {
+            $orderShape[] = array(
+                "proba" => $prob,
+                "shape" => $shape
+            );
+        }
+        return $orderShape;
+    }
+
+    private function calcFromProbList($probList) {
+        $lnProb = 0;
+        foreach ($probList as $prob) {
+            $lnProb += log(1-$prob) - log($prob);
+        }
+        return 1/$lnProb;
+    }
+
+    public function serialize() {
+        foreach ($this->fields as $field) {
+            $data[$field] = $this->classifierArray[$field]->serialize();
+        }
+        /*$data = array(
+            "tagsClassifier" => $this->tagsClassifier->serialize(),
+            "keywordClassifier" => $this->keywordClassifier->serialize(),
+        );*/
+        $serialized = serialize($data);
+        $compressed = gzdeflate($serialized);
+        return base64_encode($compressed);
+    }
+
+    public function unserialize($string) {
+        $compressed = base64_decode($string);
+        $serialized = gzinflate($compressed);
+        $data = unserialize($serialized);
+        $this->init();
+        /*$this->tagsClassifier->unserialize($data['tagsClassifier']); 
+        $this->keywordClassifier->unserialize($data['keywordClassifier']);*/
+        foreach ($this->fields as $field) {
+            $this->classifierArray[$field]->unserialize($data[$field]);
+        } 
+    }
+
+    public function save() {
         file_put_contents(
             $GLOBALS["config"]["BAYES"], 
             PHPPRE.($this->serialize()).PHPSUF
         );
     }
-    
+
     public function read() {
         if (file_exists($GLOBALS["config"]["BAYES"])) {
             $content = file_get_contents($GLOBALS["config"]["BAYES"]);
             $string = substr($content, strlen(PHPPRE),-strlen(PHPSUF));
             $this->unserialize($string);
+            return true;
         }
-    }*/
+        return false;
+    }
 }
-
-/*class shapeClassifier {
-    private $keywordClassifier;
-    private $tagsClassifier;
-    private $langClassifier;
-}*/
 
 //___________________________________
 // pageBuilder using rain TPL
@@ -787,9 +895,10 @@ class router {
     }
 
     public function route() {
-        if(isset($_GET["page"]) {
-            $this->$page = $_GET["page"];
-            unset($_GET["page"])
+        // capture postlist modifiers (page, search tags ... )
+        if(isset($_GET["page"])) {
+            $this->page = $_GET["page"];
+            unset($_GET["page"]);
         }
 
         //posting login form
@@ -888,7 +997,6 @@ class router {
         if(!file_exists('tpl/'.$reqDisplay.".html")) {
             $reqDisplay = $GLOBALS["config"]['defaultDisplay'];
         }
-        echo $reqDisplay;
         $this->pageBuilder->renderPage($reqDisplay);
 
     }
@@ -945,11 +1053,9 @@ class router {
     }
 
     public function buildLinkList($shape = "all") {
-        if($shape === "all") {
-            $posts = $this->posts;
-        } else {
-            $posts = $this->posts->filterShape($shape);
-        }
+        $posts = $this->posts->filterShape($shape);
+        krsort($posts);
+
         $keys = array();
         foreach($posts as $key => $value) {
             $keys[] = $key;
@@ -960,7 +1066,7 @@ class router {
         $pagecount = ceil(count($keys) / $postsPerPage);
         $pagecount = ($pagecount==0 ? 1 : $pagecount);
 
-        $pageNum = 1; // GET page value
+        $pageNum = $this->page; // GET page value
 
         $pageNum = ($pageNum < 1) ? 1 : $pageNum;
         $pageNum = ($pageNum > $pagecount) ? $pagecount : $pageNum;
@@ -972,13 +1078,27 @@ class router {
         while ($i < $end && $i < count($keys))
         {
             $post = $posts[$keys[$i]];
-            $post['content'] = $this->parser->transform($post['content']);
+            if($post['meta']['contentType'] === "text") {
+                $post['content'] = $this->parser->transform($post['content']);
+            }
             $post['description'] = $this->parser->transform($post['description']);
             $postsToDisplay[$keys[$i]] = $post;
             $i++;
         }
 
-        krsort($postsToDisplay);
+        $prevPageURL=''; 
+        if ($i !== count($keys)) {
+            $prevPageURL = '?shape='.$shape.'&page='.($pageNum+1);
+        }
+
+        $nextPageURL='';
+        if ($pageNum > 1) {
+            $nextPageURL = '?shape='.$shape.'&page='.($pageNum-1);
+        }
+
+        $this->pageBuilder->assign('prevPageURL', $prevPageURL);
+        $this->pageBuilder->assign('nextPageURL', $nextPageURL);
+
 
         $token = '';
         if(ipBan::canLogin()) {
@@ -1122,6 +1242,18 @@ class router {
 
         var_dump($post);
 
+        $classifier = new shapeClassifier;
+        if(!$classifier->read()) {
+            $classifier->init();
+        }
+        $data = array(
+            "tags" => $tags,
+            "keywords" => $keywords,
+            "rawText" => tokenize($title + " " + $filename)
+        );
+        $classifier->teach($data, $shapes);
+        $classifier->save();
+
         $this->posts[$post["date"]] = $post;
         $this->posts->save();
         echo "No problemz bro";
@@ -1130,12 +1262,17 @@ class router {
     private function analysePost() {
         $lang = new lang;
         $keyword = new keyword;
+        $classifier = new shapeClassifier;
 
-        $lang->learn($GLOBALS["lang"]["en"], "en");
-        $lang->learn($GLOBALS["lang"]["fr"], "fr");
-
+        // LANG ANALYSIS
+        $lang->read();
+        /*if($lang->isempty()) {
+            $lang->learn($GLOBALS["lang"]["en"], "en");
+            $lang->learn($GLOBALS["lang"]["fr"], "fr");
+        }*/
         $postLang = $lang->guess($_POST['text']);
 
+        // KEYWORD ANALYSIS
         $keyword->initCorpus($this->posts, "fr");//$GLOBALS['config']['LOCALE']);
         $scores = $keyword->find($_POST['text'], 10);
         $keywords = array();
@@ -1143,9 +1280,31 @@ class router {
             $keywords[] = $keyword;
         }
 
+        $title = $_POST['title'];
+        $filename = $_POST['filename'];
+        $explode = explode('.', $filename);
+        $ext = end($explode);
+        $mimeType = $GLOBALS['mime'][$ext];
+        $rawText = $title + " " + $filename;
+
+        // SHAPES
+        $tags = json_decode($_POST['tags']);
+
+        if(!$classifier->read()) {
+            $classifier->init();
+        }
+        $data = array(
+            "tags" => $tags,
+            "keywords" => $keywords,
+            "rawText" => tokenize($rawText)
+        );
+        $shapes = $classifier->guess($data);
+
         $analysis = array(
             "keywords" => $keywords,
-            "lang" => key($postLang)
+            "lang" => key($postLang),
+            "tags" => $tags,
+            "shapes" => $shapes
         );
 
 
@@ -1224,24 +1383,31 @@ function formatDate($ts, $format) {
     return str_replace($cible, $rempl, $date);
 }
 
-function tokenize($text, $preserveURL = true) {
+function tokenize($text) {
     $lowercase = strtolower($text);
 
-    $matches = array();
-    preg_match_all('/\b((?:ht|f)tps?):\/\/([a-zA-Z\.]+)([\/a-zA-Z\.]+)*/', $text, $matches);
-    $urls = $matches[0];
-    preg_replace('/\b((?:ht|f)tps?):\/\/([a-zA-Z\.]+)([\/a-zA-Z\.]+)*/', "çççURLççç", $text);
+    //$matches = array();
+    //preg_match_all('/\b((?:ht|f)tps?):\/\/([a-zA-Z0-9_\.]+)([\/a-zA-Z0-9_\.]+)*/', $lowercase, $matches);
+    //$urls = $matches[0];
+    
+    // strips urls
+    $lowercase = preg_replace('/\b(((ht|f)tps?|magnet):\/\/)([a-zA-Z0-9_\.]+)([\/a-zA-Z0-9_\.]+)*/', "", $lowercase);
 
     $nopunct = preg_replace('/[^A-Za-z0-9ÀàÂâÆæÇçÉéÈèÊêËëÎîÏïÔôŒœÙùÛûÜüŸÿ]/', ' ', $lowercase);
     $singlespace = preg_replace('/ +/', ' ', $nopunct);
     $tokens = explode(' ', $singlespace);
-    $urlIndex = 0;
-    foreach($tokens as $token) {
-        if($token === "çççURLççç") {
-            $token = $urls[$urlIndex];
+
+    /*$urlIndex = 0;
+    $tokens = array();
+    foreach($tokensDirty as $token) {
+        if($token === "URL") {
+            $tokens[] = stripcslashes($urls[$urlIndex]);
             $urlIndex ++;
+        } else {
+            $tokens[] = $token;
         }
-    }
+    }*/
+
     $cleanTokens = array();
     foreach ($tokens as $token) {
         if(!empty($token)) {
@@ -1263,8 +1429,5 @@ token::init();
 
 $router = new router;
 $router->route();
-
-
-// add markdown from https://github.com/evansolomon/wp-github-flavored-markdown-comments/tree/master/lib
 
 ?>
