@@ -38,27 +38,10 @@
         height:100%;
         overflow:auto;
     }
-    input.tagstyle{
-        width:auto;
-        background-color: transparent;
-        border:none;
-        color:rgb(220,220,220);
-        float:left;
-        margin:5px 2px;
-        height:20px;
-    }
-    input.normal{
-        width:100%;
-        margin:20px 0;
-        padding:5px 7px;
-        background-color: rgb(40, 44, 51);
-        box-shadow: inset 0px 0px 5px 0px rgb(11, 21, 31); 
-        border:none;
-        color:rgb(220,220,220);
-        height:38px;
-    }
+
     #dropbox{
         position:relative;
+        margin-top:40px;
     }
     #fileInfo{
         margin:-20px 0 20px 0;
@@ -133,6 +116,8 @@
         box-shadow: inset 0px 0px 5px 0px rgb(11, 21, 31);
         border:none;
         color:rgb(220,220,220);
+        display: table;
+        width:100%;
     }
     .tagbox:after{
         display:block;
@@ -162,6 +147,31 @@
         position:absolute;
         right: 6px;
         height: 100%;
+    }
+    .tagbox label {
+        display: table-cell;
+        margin:5px 2px;
+        height:20px;
+        width:1px;
+        padding:0 5px;
+        white-space:nowrap
+    }
+    input.tagstyle{
+        width:auto;
+        background-color: transparent;
+        border:none;
+        color:rgb(220,220,220);
+        margin:5px 2px;
+        height:20px;
+    }
+    input.normal{
+        width:100%;
+        display: table-cell;
+        background-color: transparent;
+        border:none;
+        color:rgb(220,220,220);
+        margin:5px 2px;
+        height:20px;
     }
 
     #tagbox > span{
@@ -345,18 +355,32 @@
     <div id="pageheader">
         <h1><a href="?"><span>puffblob</span><img src="tpl/img/logo-w.svg" height="40"/></a></h1>
     </div>
-
-    <input class="normal" placeholder="Title..." name="title" id="title">
+    <div class="tagbox">
+        <label for="title">Title :</label>
+        <input class="normal" placeholder="lol title ..." name="title" id="title" autocomplete="off">
+    </div>
     <div id="dropbox">
         <span id="fileInfo"></span>
         <textarea id="content" placeholder="Write, copy an URL or drop a file here ..."></textarea>
         <textarea id="description" placeholder="Write a description here ..."></textarea>
     </div>
     <div class="tagbox" id="tagbox">
-        <input class="tagstyle" placeholder="Add tag ..." name="tags" id="tags">
+        <label for="tags">Tags :</label>
+        <input list="tagList" class="tagstyle" placeholder="lol tags ..." name="tags" id="tags" autocomplete="off">
+        <datalist id="tagList">
+            {loop="allTags"}
+                <option value="{$value}" >
+            {/loop}
+        </datalist>
     </div>
     <div class="tagbox" id="shapebox">
-        <input class="tagstyle" placeholder="Add shape ..." name="shapes" id="shapes">
+        <label for="shapes">Shapes :</label>
+        <input list="shapeList" class="tagstyle" placeholder="lol shapes ..." name="shapes" id="shapes" autocomplete="off">
+        <datalist id="shapeList">
+            {loop="allShapes"}
+                <option value="{$value}" >
+            {/loop}
+        </datalist>
     </div>
     <div class="group" id="privacyGroup">
         <input type="checkbox" name="privacy" value ="privacy" id="privacy">
@@ -482,15 +506,33 @@
 
 //____________________________________
 // making tag input
-
+ 
         function makeTagInput(inputID, wrapperID) {
             var input = document.getElementById(inputID);
             var wrapper = document.getElementById(wrapperID);
+           
             wrapper.onclick = function() {
                 input.focus();
             }
+
             var taglist = {};
             var tagid = 0;
+
+            var preExistantTagList = wrapper.querySelectorAll('span[data-tagid]');
+            for(var i = 0; i<preExistantTagList.length; i++) {
+                var preExistantTag = preExistantTagList[i];
+                taglist[tagid] = preExistantTag.querySelector('span').innerHTML;
+                tagid++;
+                preExistantTag.querySelector('a').onclick = function(evt) {
+                    evt.preventDefault();
+                    var id = this.getAttribute("data-tagid");
+                    console.log('span[data-tagid="'+id+'"]');
+                    var selecttag = wrapper.querySelector('span[data-tagid="'+id+'"]');
+                    wrapper.removeChild(selecttag);
+                    delete taglist[id];
+                }
+            }
+
             input.addEventListener("keydown", function (evt) {
                 if((evt.wich ||evt.keyCode) === 13) { // press enter
                     var tag = input.value;
@@ -580,6 +622,7 @@
                     var analysis = JSON.parse(xhr.responseText);
                     data.meta.keywords = analysis.keywords;
                     data.meta.lang = analysis.lang;
+                    document.getElementById('shapes').value = analysis.shapes[0]['shape'];
                     send.style.display = "block";
                 }
             }

@@ -395,7 +395,7 @@
     <input type="hidden" value="" name="keywords" id="keywords">
     <div class="buttonWrapper"><button id="preview">Preview</button></div>
     <div class="buttonWrapper">
-        <button id="analyse">Analyse</button>
+        <!--<button id="analyse">Analyse</button>-->
         <button id="send">Send</button>
     </div>
 </div>
@@ -622,7 +622,7 @@
 
 //____________________________________
 // post analyse request 
-        var analyse = document.getElementById("analyse");
+        /*var analyse = document.getElementById("analyse");
 
         analyse.addEventListener("click", function(){
             var xhr = new XMLHttpRequest();
@@ -649,7 +649,7 @@
             xhr.send(analyseForm);
             analyse.style.display = "none";
 
-        }, false);
+        }, false);*/
 
 //____________________________________
 // post send request 
@@ -679,7 +679,7 @@
         };
 
         var send = document.getElementById("send");
-        send.style.display = "none";
+        //send.style.display = "none";
 
         send.addEventListener("click", function(){
             data.title = document.getElementById("title").value;

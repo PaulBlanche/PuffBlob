@@ -314,6 +314,21 @@ class postDB implements Iterator, Countable, ArrayAccess {
         return array_slice($shuffle, 0, $length);
     }
 
+    public function allTags() {
+        $tagsRepeat = array();
+        foreach($this->posts as $post) {
+            $tagsRepeat[] = $post['meta']['tags'];
+        }
+        return array_unique(call_user_func_array("array_merge", $tagsRepeat));
+    }
+
+    public function allShapes() {
+        $shapesRepeat = array();
+        foreach($this->posts as $post) {
+            $shapesRepeat[] = $post['shapes'];
+        }
+        return array_unique(call_user_func_array("array_merge", $shapesRepeat));
+    }
 }
 
 include "inc/lang.php";
@@ -616,9 +631,10 @@ class shapeClassifier {
     private $keywordClassifier;
     private $rawTextClassifier;*/
     private $classifierArray = array();
-    private $fields = array("tags", "keywords", "rawText", "mimeType");
+    private $fields = array();
 
-    public function init() {
+    public function init($fields) {
+        $this->fields = $fields;
         /*$this->tagsClassifier = new bayesianClassifier;
         $this->keywordClassifier = new bayesianClassifier;
         $this->rawTextClassifier = new bayesianClassifier;*/
@@ -642,7 +658,7 @@ class shapeClassifier {
         /*$clasTag = $this->tagsClassifier->guess($tags);
         $clasKeywords = $this->keywordClassifier->guess($keywords);
         $clasRawTexts = $this->rawTextClassifier->guess($tokenRawText);*/
-
+        $clas = array();
         foreach($this->fields as $field) {
             $clas[$field] = $this->classifierArray[$field]->guess($data[$field]);
         }
@@ -699,7 +715,6 @@ class shapeClassifier {
         $compressed = base64_decode($string);
         $serialized = gzinflate($compressed);
         $data = unserialize($serialized);
-        $this->init();
         /*$this->tagsClassifier->unserialize($data['tagsClassifier']); 
         $this->keywordClassifier->unserialize($data['keywordClassifier']);*/
         foreach ($this->fields as $field) {
@@ -714,7 +729,8 @@ class shapeClassifier {
         );
     }
 
-    public function read() {
+    public function read($fields) {
+        $this->init($fields);
         if (file_exists($GLOBALS["config"]["BAYES"])) {
             $content = file_get_contents($GLOBALS["config"]["BAYES"]);
             $string = substr($content, strlen(PHPPRE),-strlen(PHPSUF));
@@ -1119,6 +1135,8 @@ class router {
     private function addPostPage() {
         $this->pageBuilder->assign('token', token::getToken());
         $this->pageBuilder->assign('hasFile', "false");
+        $this->pageBuilder->assign('allTags', $this->posts->allTags());
+        $this->pageBuilder->assign('allShapes', $this->posts->allShapes());
         $this->pageBuilder->renderPage("addpost");
     } 
 
@@ -1177,9 +1195,9 @@ class router {
         $editHistory = $data['editHistory'];
         $private = $data['privacy'];
 
-        var_dump($data);
+        /*var_dump($data);
         var_dump($_POST);
-        var_dump($_FILES);
+        var_dump($_FILES);*/
 
         $ext = "";
         if($contentType === "file") {
@@ -1243,8 +1261,9 @@ class router {
         var_dump($post);
 
         $classifier = new shapeClassifier;
-        if(!$classifier->read()) {
-            $classifier->init();
+        $fields = array("tags", "keywords", "rawText");
+        if(!$classifier->read($fields)) {
+            $classifier->init($fields);
         }
         $data = array(
             "tags" => $tags,
@@ -1290,8 +1309,9 @@ class router {
         // SHAPES
         $tags = json_decode($_POST['tags']);
 
-        if(!$classifier->read()) {
-            $classifier->init();
+        $fields = array("tags", "keywords", "rawText");
+        if(!$classifier->read($fields)) {
+            $classifier->init($fields);
         }
         $data = array(
             "tags" => $tags,
