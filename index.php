@@ -43,6 +43,7 @@ $GLOBALS["mime"] = array(
     "" => "",
 );
 
+// SHAPE PARAMETERS
 $GLOBALS['config']['display'] = array( // display => shapes
     "blog" => array("blog", "all"), 
     "galerie" => array("wallpaper"),
@@ -350,7 +351,9 @@ class postDB implements Iterator, Countable, ArrayAccess {
         foreach($this->posts as $post) {
             $shapesRepeat[] = $post['shapes'];
         }
-        return empty($shapesRepeat) ? array() :array_unique(call_user_func_array("array_merge", $shapesRepeat));
+        $definedShapes = call_user_func_array("array_merge", $GLOBALS['config']['display']);
+        $shapesRepeatFlat = empty($shapesRepeat) ? array() : call_user_func_array("array_merge", $shapesRepeat);
+        return array_unique(array_merge($shapesRepeat, $definedShapes));
     }
 }
 
