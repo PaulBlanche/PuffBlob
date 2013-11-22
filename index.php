@@ -215,7 +215,7 @@ class postDB implements Iterator, Countable, ArrayAccess {
     private function check() {
         if (!file_exists($GLOBALS["config"]["DATABASE"])) {
             $this->posts = array();
-            $timestamp = microtime();
+            $timestamp = microtime(true);
             $post = array(
                 "title" => "this is the title",
                 "date" => $timestamp,
