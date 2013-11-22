@@ -8,13 +8,14 @@ $GLOBALS["login"] = "admin";
 $GLOBALS["hash"] = "257ee883dbc54275bf4bed37db7d6609939e1df2";
 $GLOBALS["salt"] = "salt"; 
 $GLOBALS["disable_session_protection"] = false;
+$GLOBALS["config"]["DATADIR"] = "data";
 
-$GLOBALS["config"]["DATABASE"] = "data/database.php";
-$GLOBALS["config"]["BAYES"] = "data/bayes.php";
-$GLOBALS["config"]["LANG"] = "data/lang.php";
+$GLOBALS["config"]["DATABASE"] = $GLOBALS["config"]["DATADIR"]."/database.php";
+$GLOBALS["config"]["BAYES"] = $GLOBALS["config"]["DATADIR"]."/bayes.php";
+$GLOBALS["config"]["LANG"] = $GLOBALS["config"]["DATADIR"]."/lang.php";
 $GLOBALS['config']['POSTS_PER_PAGE'] = 20; // Default links per page.
-$GLOBALS['config']['CONF_FILE'] = "data/config.php"; // Default links per page.
-$GLOBALS['config']['IPBANS_FILENAME'] = 'data/ipbans.php'; // File storage for failures and bans.
+$GLOBALS['config']['CONF_FILE'] = $GLOBALS["config"]["DATADIR"]."/config.php"; // Default links per page.
+$GLOBALS['config']['IPBANS_FILENAME'] = $GLOBALS["config"]["DATADIR"].'/ipbans.php'; // File storage for failures and bans.
 $GLOBALS['config']['BAN_AFTER'] = 4;        // Ban IP after this many failures.
 $GLOBALS['config']['BAN_DURATION'] = 1800;  // Ban duration for IP address after login failures (in seconds) (1800 sec. = 30 minutes)
 $GLOBALS['config']['LOCALE'] = "fr";  // Ban duration for IP address after login failures (in seconds) (1800 sec. = 30 minutes)
@@ -212,7 +213,7 @@ class postDB implements Iterator, Countable, ArrayAccess {
             $timestamp = microtime();
             $post = array(
                 "title" => "this is the title",
-                "date" => ,$timestamp
+                "date" => $timestamp,
                 "editHistory" => array($timestamp),
                 "content" => "This is the first post",
                 "file" => "",
@@ -1461,9 +1462,9 @@ function formatDate($ts, $format) {
 }
 
 function install() {
-    if(!is_dir("data")) {
-        mkdir("data", 0705);
-        chmod("data", 0705);
+    if(!is_dir($GLOBALS["config"]["DATADIR"])) {
+        mkdir($GLOBALS["config"]["DATADIR"], 0705);
+        chmod($GLOBALS["config"]["DATADIR"], 0705);
     }
     echo "reload the page";
     file_put_contents($GLOBALS['config']['CONF_FILE'], "<?php //dummy conf file ?>");
@@ -1473,10 +1474,6 @@ function install() {
 
 function tokenize($text) {
     $lowercase = strtolower($text);
-
-    //$matches = array();
-    //preg_match_all('/\b((?:ht|f)tps?):\/\/([a-zA-Z0-9_\.]+)([\/a-zA-Z0-9_\.]+)*/', $lowercase, $matches);
-    //$urls = $matches[0];
     
     // strips urls
     $lowercase = preg_replace('/\b(((ht|f)tps?|magnet):\/\/)([a-zA-Z0-9_\.]+)([\/a-zA-Z0-9_\.]+)*/', "", $lowercase);
@@ -1484,17 +1481,6 @@ function tokenize($text) {
     $nopunct = preg_replace('/[^A-Za-z0-9ÀàÂâÆæÇçÉéÈèÊêËëÎîÏïÔôŒœÙùÛûÜüŸÿ]/', ' ', $lowercase);
     $singlespace = preg_replace('/ +/', ' ', $nopunct);
     $tokens = explode(' ', $singlespace);
-
-    /*$urlIndex = 0;
-    $tokens = array();
-    foreach($tokensDirty as $token) {
-        if($token === "URL") {
-            $tokens[] = stripcslashes($urls[$urlIndex]);
-            $urlIndex ++;
-        } else {
-            $tokens[] = $token;
-        }
-    }*/
 
     $cleanTokens = array();
     foreach ($tokens as $token) {
@@ -1504,13 +1490,6 @@ function tokenize($text) {
     }
     return $cleanTokens;
 }
-
-
-/*function autoLocale(){
-    $loc = 'en_US'; // Default if browser does not send HTTP_ACCEPT_LANGUAGE
-    setlocale(LC_TIME, array($loc, "us"));
-}*/
-
 
 ipBan::init();
 token::init();

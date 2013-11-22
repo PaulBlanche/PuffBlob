@@ -627,8 +627,8 @@
                     var analysis = JSON.parse(xhr.responseText);
                     data.meta.keywords = analysis.keywords;
                     data.meta.lang = analysis.lang;
-                    var firstShape = analysis.shapes[0] || {shape:''};
-                    document.getElementById('shapes').value = firstShape['shape'];
+                    var shapes = analysis.shapes || [{shape:''}];
+                    document.getElementById('shapes').value = shapes[0]['shape'];
                     send.style.display = "block";
                 }
             }
