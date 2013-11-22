@@ -3,6 +3,13 @@
 date_default_timezone_set('UTC');
 //autoLocale();
 
+// USER CONFIG
+$GLOBALS["login"] = "admin";
+$GLOBALS["hash"] = "257ee883dbc54275bf4bed37db7d6609939e1df2";
+$GLOBALS["salt"] = "salt"; 
+$GLOBALS["disable_session_protection"] = false;
+// USER CONFIG
+
 $GLOBALS["config"]["DATABASE"] = "data/database.php";
 $GLOBALS["config"]["BAYES"] = "data/bayes.php";
 $GLOBALS["config"]["LANG"] = "data/lang.php";
