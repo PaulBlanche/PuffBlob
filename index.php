@@ -348,10 +348,16 @@ class postDB implements Iterator, Countable, ArrayAccess {
     }
 }
 
-include "inc/lang.php";
 class lang {
     private $trigramIndex = array();
     private $languageCount = array();
+
+    public function init() {
+        include "inc/lang.php";
+        $this->learn($GLOBALS["lang"]["en"], "en");
+        $this->learn($GLOBALS["lang"]["fr"], "fr");
+        $this->save();
+    }
 
     private function ngram($token, $n = 3) {
         $ngrams = array();
@@ -452,12 +458,11 @@ class lang {
             $content = file_get_contents($GLOBALS["config"]["LANG"]);
             $string = substr($content, strlen(PHPPRE),-strlen(PHPSUF));
             $this->unserialize($string);
+            return true;
         }
+        return false;
     }
 
-    public function isempty() {
-        return (count($this->trigramIndex) + count($this->languageCount)) === 0 ;
-    }
 }
 
 include "inc/stopwords.php";
@@ -1327,11 +1332,10 @@ class router {
         $classifier = new shapeClassifier;
 
         // LANG ANALYSIS
-        $lang->read();
-        /*if($lang->isempty()) {
-            $lang->learn($GLOBALS["lang"]["en"], "en");
-            $lang->learn($GLOBALS["lang"]["fr"], "fr");
-        }*/
+        if(!$lang->read()) {
+            $lang->init();
+        }
+
         $postLang = $lang->guess($_POST['text']);
 
         // KEYWORD ANALYSIS
