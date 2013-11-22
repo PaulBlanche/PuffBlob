@@ -209,18 +209,27 @@ class postDB implements Iterator, Countable, ArrayAccess {
     private function check() {
         if (!file_exists($GLOBALS["config"]["DATABASE"])) {
             $this->posts = array();
+            $timestamp = microtime();
             $post = array(
-                "title" => "ceci est le titre",
-                "date" => "20130529_115823",
-                "content" => "ceci est le contenu (adresse, text, fichier ...)",
-                "description" => "ceci est la description",
+                "title" => "this is the title",
+                "date" => ,$timestamp
+                "editHistory" => array($timestamp),
+                "content" => "This is the first post",
+                "file" => "",
+                "description" => "",
+                "privacy" => "public",
                 "meta" => array(
+                    "contentType" => "text",
+                    "contentLength" => strlen("This is the first post"),
+                    "filename" => "",
                     "ext" => "",
-                    "tags" => array("ce", "sont", "les", "tags"),
-                    "lang" => "fr",
-                    "keywords" => array("ceci", "chapô", "contenu", "est")
+                    "mimeType" => "",
+                    "tags" => array("first", "post"),
+                    "lang" => "en",
+                    "keywords" => array("first", "post", "this", "is", "the"),
+                    "filesize" => ""
                 ),
-                "shapes" => array('blog', 'bookmarks'),
+                "shapes" => array("blog")
             );
             $post['hash'] = hash('sha1', trim($post['content']));
             $this->posts[$post['date']] = $post;
