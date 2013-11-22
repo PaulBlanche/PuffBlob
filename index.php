@@ -10,6 +10,11 @@ $GLOBALS["salt"] = "salt";
 $GLOBALS["disable_session_protection"] = false;
 $GLOBALS["config"]["DATADIR"] = "data";
 
+if(!is_dir($GLOBALS["config"]["DATADIR"])) {
+    mkdir($GLOBALS["config"]["DATADIR"], 0705);
+    chmod($GLOBALS["config"]["DATADIR"], 0705);
+}
+
 $GLOBALS["config"]["DATABASE"] = $GLOBALS["config"]["DATADIR"]."/database.php";
 $GLOBALS["config"]["BAYES"] = $GLOBALS["config"]["DATADIR"]."/bayes.php";
 $GLOBALS["config"]["LANG"] = $GLOBALS["config"]["DATADIR"]."/lang.php";
@@ -123,7 +128,7 @@ class ES_GHF_Markdown_Parser extends MarkdownExtra_Parser {
 if (!is_file($GLOBALS['config']['CONF_FILE'])) {
     install();
 }
-//require $GLOBALS['config']['CONF_FILE'];
+require $GLOBALS['config']['CONF_FILE'];
 
 header('Content-Type: text/html; charset=utf-8'); 
 
@@ -1462,13 +1467,20 @@ function formatDate($ts, $format) {
 }
 
 function install() {
-    if(!is_dir($GLOBALS["config"]["DATADIR"])) {
-        mkdir($GLOBALS["config"]["DATADIR"], 0705);
-        chmod($GLOBALS["config"]["DATADIR"], 0705);
+    $pageBuilder = new pageBuilder;
+    $pageBuilder->renderPage('install');
+    if(!empty($_POST['setLogin']) && !empty($_POST['setPassword'])) {
+        $GLOBALS['login'] = $_POST['setLogin'];
+        $GLOBALS['salt'] = sha1(uniqid('',true).'_'.mt_rand());
+        $GLOBALS['hash'] = sha1($_POST['setPassword'].$GLOBALS['login'].$GLOBALS['salt']);
+
+        $config = '<?php $GLOBALS["login"] ='.var_export($GLOBALS['login'], true).";\n";
+        $config .= '$GLOBALS["salt"] ='.var_export($GLOBALS['salt'], true).";\n";
+        $config .= '$GLOBALS["hash"] ='.var_export($GLOBALS['hash'], true).";\n?>";
+        
+        file_put_contents($GLOBALS['config']['CONF_FILE'], $config);
+        login::check($_POST['setPassword'], $GLOBALS['login']);        
     }
-    echo "reload the page";
-    file_put_contents($GLOBALS['config']['CONF_FILE'], "<?php //dummy conf file ?>");
-    login::check("password", $GLOBALS['login']);
     exit;
 }
 
