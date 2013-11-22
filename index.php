@@ -6,7 +6,7 @@ date_default_timezone_set('UTC');
 $GLOBALS["config"]["DATABASE"] = "data/database.php";
 $GLOBALS["config"]["BAYES"] = "data/bayes.php";
 $GLOBALS["config"]["LANG"] = "data/lang.php";
-$GLOBALS['config']['POSTS_PER_PAGE'] = 3; // Default links per page.
+$GLOBALS['config']['POSTS_PER_PAGE'] = 20; // Default links per page.
 $GLOBALS['config']['CONF_FILE'] = "data/config.php"; // Default links per page.
 $GLOBALS['config']['IPBANS_FILENAME'] = 'data/ipbans.php'; // File storage for failures and bans.
 $GLOBALS['config']['BAN_AFTER'] = 4;        // Ban IP after this many failures.
@@ -17,11 +17,9 @@ $GLOBALS['traduction']['date']['fr'] = array('Lundi','Mardi','Mercredi','Jeudi',
 $GLOBALS["mime"] = array(
     //images
     "png" => "image/png",
-    "jpg" => "image/jpg",
-    "tiff" => "image/tiff",
+    "jpg" => "image/jpeg",
+    "jpeg" => "image/jpeg",
     "gif" => "image/gif",
-    "svg" => "image/svg+xml",
-    "bmp" => "image/bmp",
 
     //text
     "txt" => "text/plain",
@@ -35,7 +33,7 @@ $GLOBALS["mime"] = array(
 
 $GLOBALS['config']['display'] = array( // display => shapes
     "blog" => array("blog", "all"), 
-    "galerie" => array("wallpaper", "screenshot_minecraft"),
+    "galerie" => array("wallpaper"),
     "links" => array("shaarli")
 );
 $GLOBALS['config']['defaultDisplay'] = "blog";
@@ -53,6 +51,7 @@ $GLOBALS["UPLOAD_ERROR"] = array(
 
 define('PHPPRE','<?php /* '); // Prefix to encapsulate data in php code.
 define('PHPSUF',' */ ?>'); // Suffix to encapsulate data in php code.
+define('THMBSUF','_tmb'); // Suffix to encapsulate data in php code.
 
 // Force cookie path (but do not change lifetime)
 $cookie = session_get_cookie_params();
@@ -888,10 +887,46 @@ class token {
 }
 
 
-class img {
+class image {
 
-    static function makeThumb($filename) {
+    // open image according to extension. If stupid people rename gif to jpg they deserve it.
+    // resize it to 120*120 (absolute 120 in width, 120 in height when it can)
+    static function makeThumb($filepath, $mimeType, $width = 120) {
+        switch($mimeType) {
+            case "image/jpeg":
+                $ims = imagecreatefromjpeg($filepath);
+                break;
+            case "image/gif":
+                $ims = imagecreatefromjpeg($filepath);
+                break;
+            case "image/png":
+                $ims = imagecreatefromjpeg($filepath);
+                break;
+            default:
+                return false;
+                break;
+        }
+        $w = imagesx($ims);
+        $h = imagesy($ims);
+        $dw = $width;
+        $dh = min(floor($h / $w * $dw), 120);
+        $sy = 0;
+        $sw = $w;
+        $sh = $h;
+        if($h>$w) {
+            $sy = ($h-$w)/2;
+            $sh = $w; 
+        }
+        $imd = imagecreatetruecolor($dw, $dh);
+        imagecopyresampled($imd, $ims, 0, 0, 0, $sy, $dw, $dh, $sw, $sh);
+        imageinterlace($imd, true); // progressive jpg
 
+        $info = pathinfo($filepath);
+        $thumbPath = $info['dirname'] . '/' . $info["filename"] . THMBSUF . "." . $info['extension'];
+        imagejpeg($imd, $thumbPath, 90);
+        imagedestroy($imd);
+        imagedestroy($ims);
+        return true;
     }
 }
 
@@ -1219,6 +1254,10 @@ class router {
                     unlink($oldfile);
                 }
                 move_uploaded_file($file["tmp_name"], $fileURL);
+                if (strpos($GLOBALS['mime'][$ext], 'image') !== false) {
+                    image::makeThumb($fileURL, $GLOBALS['mime'][$ext]);
+                }
+
             } 
         }else {
             if(file_exists($oldfile)){
@@ -1260,18 +1299,20 @@ class router {
 
         var_dump($post);
 
-        $classifier = new shapeClassifier;
-        $fields = array("tags", "keywords", "rawText");
-        if(!$classifier->read($fields)) {
-            $classifier->init($fields);
+        if(!isset($_POST['edit'])) {
+            $classifier = new shapeClassifier;
+            $fields = array("tags", "keywords", "rawText");
+            if(!$classifier->read($fields)) {
+                $classifier->init($fields);
+            }
+            $data = array(
+                "tags" => $tags,
+                "keywords" => $keywords,
+                "rawText" => tokenize($title + " " + $filename)
+            );
+            $classifier->teach($data, $shapes);
+            $classifier->save();
         }
-        $data = array(
-            "tags" => $tags,
-            "keywords" => $keywords,
-            "rawText" => tokenize($title + " " + $filename)
-        );
-        $classifier->teach($data, $shapes);
-        $classifier->save();
 
         $this->posts[$post["date"]] = $post;
         $this->posts->save();
@@ -1345,6 +1386,8 @@ class router {
         $this->pageBuilder->assign('filesize', $post['meta']['filesize']);
         $this->pageBuilder->assign('filename', $post['meta']['filename']);
         $this->pageBuilder->assign('private', $post['privacy'] === "private");
+        $this->pageBuilder->assign('allTags', $this->posts->allTags());
+        $this->pageBuilder->assign('allShapes', $this->posts->allShapes());
         $this->pageBuilder->renderPage('editpost');
     }
 
@@ -1373,6 +1416,11 @@ class router {
 function stringList2Array($tagList) {
     $tagList = preg_replace("/ *, */", ",", $tagList);
     return explode(",", $tagList);
+}
+
+function thumbULR($imageURL) {
+    $info = pathinfo($imageURL);
+    return $info['dirname'] . '/' . $info["filename"] . THMBSUF . "." . $info['extension'];
 }
 
 function getIP() {
