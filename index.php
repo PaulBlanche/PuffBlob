@@ -1,14 +1,13 @@
 <?php
 
 date_default_timezone_set('UTC');
-//autoLocale();
 
-// USER CONFIG
+// USER CONFIG (will be moved in a config.php file)
+// admin/password, because fuck u security, ama testing.
 $GLOBALS["login"] = "admin";
 $GLOBALS["hash"] = "257ee883dbc54275bf4bed37db7d6609939e1df2";
 $GLOBALS["salt"] = "salt"; 
 $GLOBALS["disable_session_protection"] = false;
-// USER CONFIG
 
 $GLOBALS["config"]["DATABASE"] = "data/database.php";
 $GLOBALS["config"]["BAYES"] = "data/bayes.php";
@@ -120,7 +119,10 @@ class ES_GHF_Markdown_Parser extends MarkdownExtra_Parser {
         }
 }
 
-require $GLOBALS['config']['CONF_FILE'];
+if (!is_file($GLOBALS['config']['CONF_FILE'])) {
+    install();
+}
+//require $GLOBALS['config']['CONF_FILE'];
 
 header('Content-Type: text/html; charset=utf-8'); 
 
@@ -221,7 +223,7 @@ class postDB implements Iterator, Countable, ArrayAccess {
                 "shapes" => array('blog', 'bookmarks'),
             );
             $post['hash'] = hash('sha1', trim($post['content']));
-            $this->posts[$post] = $post['date'];
+            $this->posts[$post['date']] = $post;
             $this->save();
         }
     }
@@ -325,7 +327,7 @@ class postDB implements Iterator, Countable, ArrayAccess {
         foreach($this->posts as $post) {
             $tagsRepeat[] = $post['meta']['tags'];
         }
-        return array_unique(call_user_func_array("array_merge", $tagsRepeat));
+        return empty($tagsRepeat) ? array() : array_unique(call_user_func_array("array_merge", $tagsRepeat));
     }
 
     public function allShapes() {
@@ -333,7 +335,7 @@ class postDB implements Iterator, Countable, ArrayAccess {
         foreach($this->posts as $post) {
             $shapesRepeat[] = $post['shapes'];
         }
-        return array_unique(call_user_func_array("array_merge", $shapesRepeat));
+        return empty($shapesRepeat) ? array() :array_unique(call_user_func_array("array_merge", $shapesRepeat));
     }
 }
 
@@ -1456,6 +1458,17 @@ function formatDate($ts, $format) {
     $cible = array('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday','January','February','March','April','May','June','July','August','September','October','November','December');
     $rempl = $GLOBALS['traduction']['date'][$GLOBALS['config']['LOCALE']];
     return str_replace($cible, $rempl, $date);
+}
+
+function install() {
+    if(!is_dir("data")) {
+        mkdir("data", 0705);
+        chmod("data", 0705);
+    }
+    echo "reload the page";
+    file_put_contents($GLOBALS['config']['CONF_FILE'], "<?php //dummy conf file ?>");
+    login::check("password", $GLOBALS['login']);
+    exit;
 }
 
 function tokenize($text) {
