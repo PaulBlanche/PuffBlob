@@ -636,6 +636,7 @@
             analyseForm.append('text', document.getElementById("content").value + " " + document.getElementById("description").value);
             analyseForm.append('tags', JSON.stringify(getTags("tagbox")));
             analyseForm.append('title', document.getElementById("title").value);
+            analyseForm.append('contentType', data.meta.contentType);
             analyseForm.append('filename', "");
             if(document.getElementById("filename")) {
                 analyseForm.append('filename', document.getElementById("filename").value);

@@ -644,44 +644,31 @@ class bayesianClassifier {
 }
 
 class shapeClassifier {
-    /*private $tagsClassifier;
-    private $keywordClassifier;
-    private $rawTextClassifier;*/
     private $classifierArray = array();
     private $fields = array();
 
     public function init($fields) {
         $this->fields = $fields;
-        /*$this->tagsClassifier = new bayesianClassifier;
-        $this->keywordClassifier = new bayesianClassifier;
-        $this->rawTextClassifier = new bayesianClassifier;*/
         foreach ($this->fields as $field) {
             $this->classifierArray[$field] = new bayesianClassifier;
         }
     }
 
-    public function teach(/*$tags, $keywords, $tokenRawText*/ $data, $shapes) {
+    public function teach($data, $shapes) {
         foreach($shapes as $shape) {
-            /*$this->tagsClassifier->teach($tags, $shape);
-            $this->keywordClassifier->teach($keywords, $shape);
-            $this->rawTextClassifier->teach($tokenRawText, $shape);*/
             foreach($this->fields as $field) {
                 $this->classifierArray[$field]->teach($data[$field], $shape);
             }
         }
     }
 
-    public function guess(/*$tags, $keywords, $tokenRawText*/ $data) {
-        /*$clasTag = $this->tagsClassifier->guess($tags);
-        $clasKeywords = $this->keywordClassifier->guess($keywords);
-        $clasRawTexts = $this->rawTextClassifier->guess($tokenRawText);*/
+    public function guess( $data) {
         $clas = array();
         foreach($this->fields as $field) {
             $clas[$field] = $this->classifierArray[$field]->guess($data[$field]);
         }
 
         $allClas = call_user_func_array("array_merge", $clas);
-        //var_dump($allClas);
         $shapesList = array();
         $shapes = array();
         foreach($allClas as $clas){
@@ -719,10 +706,7 @@ class shapeClassifier {
         foreach ($this->fields as $field) {
             $data[$field] = $this->classifierArray[$field]->serialize();
         }
-        /*$data = array(
-            "tagsClassifier" => $this->tagsClassifier->serialize(),
-            "keywordClassifier" => $this->keywordClassifier->serialize(),
-        );*/
+
         $serialized = serialize($data);
         $compressed = gzdeflate($serialized);
         return base64_encode($compressed);
@@ -732,8 +716,6 @@ class shapeClassifier {
         $compressed = base64_decode($string);
         $serialized = gzinflate($compressed);
         $data = unserialize($serialized);
-        /*$this->tagsClassifier->unserialize($data['tagsClassifier']); 
-        $this->keywordClassifier->unserialize($data['keywordClassifier']);*/
         foreach ($this->fields as $field) {
             $this->classifierArray[$field]->unserialize($data[$field]);
         } 
@@ -1319,14 +1301,16 @@ class router {
 
         if(!isset($_POST['edit'])) {
             $classifier = new shapeClassifier;
-            $fields = array("tags", "keywords", "rawText");
+        $fields = array("tags", "keywords", "rawText", "mimeType", "contentType");
             if(!$classifier->read($fields)) {
                 $classifier->init($fields);
             }
             $data = array(
                 "tags" => $tags,
                 "keywords" => $keywords,
-                "rawText" => tokenize($title + " " + $filename)
+                "rawText" => tokenize($title + " " + $filename),
+                "mimeType" => $GLOBALS['mime'][$ext],
+                "contentType" => $contentType
             );
             $classifier->teach($data, $shapes);
             $classifier->save();
@@ -1352,7 +1336,7 @@ class router {
 
         // KEYWORD ANALYSIS
         $keyword->initCorpus($this->posts, "fr");//$GLOBALS['config']['LOCALE']);
-        $scores = $keyword->find($_POST['text'], 10);
+        $scores = $keyword->find($_POST['text'], 20);
         $keywords = array();
         foreach($scores as $keyword => $score) {
             $keywords[] = $keyword;
@@ -1360,6 +1344,7 @@ class router {
 
         $title = $_POST['title'];
         $filename = $_POST['filename'];
+        $contentType = $_POST['contentType'];
         $explode = explode('.', $filename);
         $ext = end($explode);
         $mimeType = $GLOBALS['mime'][$ext];
@@ -1368,14 +1353,16 @@ class router {
         // SHAPES
         $tags = json_decode($_POST['tags']);
 
-        $fields = array("tags", "keywords", "rawText");
+        $fields = array("tags", "keywords", "rawText", "mimeType", "contentType");
         if(!$classifier->read($fields)) {
             $classifier->init($fields);
         }
         $data = array(
             "tags" => $tags,
             "keywords" => $keywords,
-            "rawText" => tokenize($rawText)
+            "rawText" => tokenize($rawText),
+            "mimeType" => $mimeType,
+            "contentType" => $contentType
         );
         $shapes = $classifier->guess($data);
 
@@ -1383,7 +1370,7 @@ class router {
             "keywords" => $keywords,
             "lang" => key($postLang),
             "tags" => $tags,
-            "shapes" => $shapes
+            "mimeType" => $shapes
         );
 
 
