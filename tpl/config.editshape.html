@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html>
+<head>{include="includes"}
+<style>
+    * {
+        -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+        -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+        box-sizing: border-box;         /* Opera/IE 8+ */
+    }
+    html{
+        height:100%;
+        font-size:14px;
+        font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;
+    }
+    body{
+        margin:0;
+        padding:0;
+        height:100%;
+        background-color: rgb(231,231,231);
+    }
+    #editlinkform::-moz-placeholder{
+        font-family: Source Code Pro,Monaco,Andale Mono,Consolas,monospace;
+        font-size: 14px;
+    }
+
+    #editlinkform textarea::-moz-selection, #editlinkform input::-moz-selection {
+        background: rgb(64, 99, 99);
+        color:#fff;
+    }
+
+    #editlinkform{
+        float:left;
+        position:relative;
+        width:50%;
+        max-width:40em;
+        background-color: rgb(46, 50, 55);
+        padding:20px;
+        height:100%;
+        overflow:auto;
+    }
+
+    #dropbox{
+        position:relative;
+        margin-top:40px;
+    }
+    #fileInfo{
+        margin:-20px 0 20px 0;
+        box-shadow: 0px 0px 10px 0px rgb(11, 21, 31); 
+        width:100%;
+        background-color:rgb(202, 203, 192);
+        display: block;
+        color:rgb(123, 124, 102);
+    }
+    #fileInfo:after{
+        display:block;
+        content:"";
+        clear:both;
+    }
+    #fileInfo input{
+        color:rgb(96, 97, 79);
+        border:none;
+        background-color: transparent;
+        margin-left:20px;
+        width:200px;
+        font-weight:bold;
+    }
+    #fileInfo > span{
+        margin-right: 20px;
+        padding:0 10px;
+        line-height: 34px;
+        float:left;
+    }
+    #fileInfo a{
+        text-decoration:none;
+        font-size:12px;
+        font-weight:bold;
+        position: relative;
+        top: -1px;
+        margin-left: 8px;
+        padding: 2px 0 2px 4px;
+        position:absolute;
+        right: 6px;
+        color:rgb(96, 97, 79);
+    }
+    #description{
+        height:448px;
+    }
+    #dropbox.drag textarea{
+        border:8px dashed rgb(71, 71, 71);
+        background-color: rgb(46, 50, 55);
+        box-shadow: inset 0px 0px 0px 0px rgb(11, 21, 31);
+    }
+    textarea{
+        font-family: Source Code Pro,Monaco,Andale Mono,Consolas,monospace;
+        font-size:14px;
+        width:100%;
+        padding:0;
+        height:500px;
+        max-height:500px;
+        resize:none;
+        display: block;
+        border:none;
+        color:rgb(220,220,220);
+        padding: 10px;
+        background-color: rgb(40, 44, 51);
+        box-shadow: inset 0px 0px 10px -2px rgb(11, 21, 31);
+        border-color:rgb(48,48,48);
+        transition-property:box-shadow, background-color, border-color;
+        transition-duration: 0.3s; 
+    }
+
+    .tagbox{
+        margin:20px 0;
+        padding:5px;
+        background-color: rgb(40, 44, 51);
+        box-shadow: inset 0px 0px 5px 0px rgb(11, 21, 31);
+        border:none;
+        color:rgb(220,220,220);
+        display: table;
+        width:100%;
+    }
+    .tagbox:after{
+        display:block;
+        content:"";
+        clear:both;
+    }
+    .tagbox > span{
+        padding:2px 5px 3px 5px;
+        margin:2px;
+        float:left;
+        box-shadow:0px 0px 2px rgb(11, 21, 31);
+        border-radius: 4px;
+        position:relative;
+        display:table-cell;
+        margin-bottom: -3px;
+    }
+    .tagbox span span{
+        margin-right: 20px;
+        display: block;
+    }
+    .tagbox a{
+        text-decoration:none;
+        font-size:11px;
+        font-weight:bold;
+        position: relative;
+        top: 0px;
+        margin-left: 8px;
+        padding: 2px 0 2px 4px;
+        position:absolute;
+        right: 6px;
+        height: 100%;
+    }
+    .tagbox label {
+        display: table-cell;
+        margin:5px 2px;
+        height:20px;
+        width:1px;
+        padding:0 10px 0 5px;
+        white-space:nowrap;
+        font-weight: bold;
+        opacity:0.5;
+    }
+    .tagbox span.dropHere{
+        padding:2px 5px 3px 5px;
+        margin:2px;
+        float:left;
+        box-shadow:0px 0px 2px rgb(11, 21, 31);
+        border: 1px dashed #FFF;
+        color: #fff;
+        border-radius: 4px;
+        position:relative;
+        display:table-cell;
+        margin-bottom: -3px;
+        background-color:transparent;
+        opacity: 0.6;
+    }
+
+    .tagbox > span{
+        background-color: rgb(32,103,180);
+        color: rgb(200, 200, 255);
+        border: 1px solid rgb(32,49,119);
+    }
+    .tagbox a{
+        color: rgb(20, 34, 50);
+        border-left: 1px dotted rgb(20, 34, 50);
+    }
+
+    /* CHECKBOX */
+    .group {
+        color:#AAA;
+        margin: 10px 50px 50px 0px;
+        float:left;
+    }
+    .group input:not(:checked), .group input:checked { /*style applied only for recent browser*/
+        position:absolute;
+        left:-9999px;
+    }
+
+    .group input:not(:checked) + label, .group input:checked + label { 
+        position:relative;
+        padding-left: 80px;
+        cursor: pointer;
+    }
+    /* aspect chekbox */
+    .group input:not(:checked)+ label:before, .group input:checked + label:before { 
+        content:'';
+        position: absolute;
+        left:0; top: -10px;
+        width: 70px; height:36px;
+        border-radius: 18px;
+        background-color: rgb(40, 44, 51);
+        box-shadow: inset 0px 0px 5px 0px rgb(11,21,31);
+        transition: background-color .2s; 
+    }
+    .group input:not(:checked)+ label:after, .group input:checked + label:after {
+        content:'';
+        position: absolute;
+        left:10px; top: -2px;
+        width: 20px; height:20px;
+        border-radius: 10px;
+        background-color: rgb(31, 34, 40);
+        box-shadow: 0px 0px 5px 0px rgb(1,1,1); 
+        transition: all .2s;
+    }
+    .group input:checked + label:before{
+        background-color:  rgb(30, 34, 40);
+    }    
+    .group input:checked + label:after{
+        background-color: rgb(32,180,103);
+        left:42px;
+    } 
+    .group input:checked + label .ui, .group input:not(:checked) + label .ui:before, .group input:checked + label .ui:after {
+        position: absolute;
+        left: 6px;
+        width: 65px;
+        font-weight: bold;
+        font-height: 15px;
+        transition: all .2s;
+    }
+    .group input:not(:checked) + label .ui:before {
+        content: "no";
+        left:38px;
+    }
+    .group input:checked + label .ui:after {
+        content: "yes";
+        color: rgb(32,180,103);
+    }
+    .buttonWrapper{
+        width:50%;
+        float:left;
+        padding:0 5px;
+        margin-bottom:20px;
+    }
+
+    button{
+        font-family: Source Code Pro,Monaco,Andale Mono,Consolas,monospace;
+        font-size:15px;
+        font-weight: bold;
+        cursor: pointer;
+        width:100%;
+        padding:10px;
+        border:none;
+        background-color: rgb(52, 59, 68);
+        color: rgb(151, 160, 168);
+        box-shadow: 0px 0px 5px 0px rgb(11,21,31); 
+    }
+
+    #send:hover {
+        background-color: rgb(32,180,103);
+        color: rgb(14, 80, 42);
+    }
+    #analyse:hover {
+        background-color: rgb(32,180,103);
+        color: rgb(14, 80, 42);
+    }
+    #preview:hover {
+        background-color: rgb(32,180,103);
+        color: rgb(14, 80, 42);
+    }
+    button:hover{
+        box-shadow: 0px 0px 10px 2px rgb(21, 21, 21);         
+    }
+
+    #rest {
+        float:left;
+        font-family: verdana,helvetica,sans-serif;
+        width:50%;
+        max-width:40em;
+        padding:20px;
+    }
+
+    .post h1{
+        text-transform:uppercase;
+        font-size:20px;
+        line-height:32px;
+        padding:3px;
+        margin:0;
+    }
+    .post p{
+        margin:0;
+    }
+
+</style>
+<style>
+@font-face {
+    font-family: 'snicklesregular';
+    src: url('tpl/font/snickles-webfont.eot');
+    src: url('tpl/font/snickles-webfont.eot?#iefix') format('embedded-opentype'),
+         url('tpl/font/snickles-webfont.woff') format('woff'),
+         url('tpl/font/snickles-webfont.ttf') format('truetype'),
+         url('tpl/font/snickles-webfont.svg#snicklesregular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+#pageheader h1{
+    font-family: "snicklesregular";
+    text-align: right;
+    letter-spacing: 0.15em;
+    margin:0;
+    padding:0;
+}
+
+#pageheader span {
+    margin:10px;
+    position: relative;
+    top:-5px;
+}
+
+#pageheader a {
+    text-decoration: none;
+    color:#FFF;
+    opacity:0.8;
+}
+
+#pageheader a:hover {
+    opacity:1;
+}
+
+[draggable] {
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+  /* Required to make elements draggable in old WebKit */
+  -khtml-user-drag: element;
+  -webkit-user-drag: element;
+  cursor: move;
+}
+
+.over {
+    background-color:#FFF;
+}
+
+
+</style>
+</head>
+<body>
+
+<div id="editlinkform">
+    <div class="tagbox">
+        <label for="display1">Tags :</label><span draggable="true">TEst1</span><span draggable="true">TEst2</span>
+        <span class="dropHere">Drop Here</span>
+    </div>
+    <div class="tagbox">
+        <label for="display2">Tags :</label><span draggable="true">TEst3</span><span draggable="true">TEst4</span>
+        <span class="dropHere">Drop Here</span>
+    </div>
+</div>
+</body>
+<script>
+    function handleDragStart(e) {
+        this.style.opacity = '0.4';
+        dragSrcEl = this;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', this.innerHTML);
+        [].forEach.call(dropboxes, function (dropbox) {
+            dropbox.style.display = "table-cell";
+        });
+    }
+
+    function handleDragOver(e) {
+        if(e.preventDefault) {
+            e.preventDefault();
+        }
+        e.dataTransfer.dropEffect = 'move';
+        return false;
+    }
+
+    function handleDragEnter(e) {
+        this.classList.add('over');
+    }
+
+    function handleDragLeave(e) {
+        this.classList.remove('over');
+    }
+
+    function handleDrop(e) {
+        if(e.stopPropagation) {
+            e.stopPropagation();
+        }
+        if(dragSrcEl != this) {
+            this.parentNode.appendChild(dragSrcEl);
+            dropHere = this.parentNode.querySelector('.dropHere');
+            this.parentNode.appendChild(dropHere);
+        }
+        [].forEach.call(dropboxes, function (dropbox) {
+            dropbox.style.display = "none";
+        });        
+        return false;
+    }
+
+    function handleDragEnd(e) {
+        this.style.opacity = '1';
+        [].forEach.call(labels, function (label) {
+            label.classList.remove('over');
+        });
+    }
+
+    var dropboxes = document.querySelectorAll('.dropHere');
+    var labels = document.querySelectorAll('.tagbox span');
+    [].forEach.call(labels, function (label) {
+        label.addEventListener('dragstart', handleDragStart, false);
+        label.addEventListener('dragenter', handleDragEnter, false);
+        label.addEventListener('dragover', handleDragOver, false);
+        label.addEventListener('dragleave', handleDragLeave, false);
+        label.addEventListener('drop', handleDrop, false);
+        label.addEventListener('dragend', handleDragEnd, false);
+    });
+</script>
+</html>

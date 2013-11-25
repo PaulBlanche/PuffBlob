@@ -955,6 +955,10 @@ class config {
                 $pageBuilder->renderPage("config.changepwd");
             }
         }
+
+        if($_GET['config'] === 'editshape') {
+            $pageBuilder->renderPage("config.editshape");
+        } 
     }
 
     static public function changePassword($oldPass, $newPass) {
@@ -978,11 +982,6 @@ class config {
     }
 
 }
-
-class postGestion {
-
-}
-
 
 //___________________________________
 // router to call correct function
