@@ -347,7 +347,7 @@ class postDB implements Iterator, Countable, ArrayAccess {
         }
         $definedShapes = call_user_func_array("array_merge", $GLOBALS['config']['display']);
         $shapesRepeatFlat = empty($shapesRepeat) ? array() : call_user_func_array("array_merge", $shapesRepeat);
-        return array_unique(array_merge($shapesRepeat, $definedShapes));
+        return array_unique(array_merge($shapesRepeatFlat, $definedShapes));
     }
 }
 
@@ -946,7 +946,7 @@ class image {
 
 class config {
 
-    static public function route($pageBuilder) {
+    static public function route($pageBuilder, $posts) {
         if($_GET['config'] === "changepwd") {
             if(isset($_POST['newpassword']) && isset($_POST['oldpassword'])) {
                 self::changePassword($_POST['oldpassword'], $_POST['newpassword']);
@@ -957,6 +957,33 @@ class config {
         }
 
         if($_GET['config'] === 'editshape') {
+            $allDisplay = glob('tpl/disp.*.html');
+            $displays = array();
+            foreach($allDisplay as $path) {
+                $displays[] = preg_replace('/tpl\/disp.(.*).html/', "$1", $path);
+            }
+            $allshapes = $posts->allShapes();
+            $shapes = array();
+            foreach($allshapes as $shape) {
+                $foundDisplay = false;
+                foreach($GLOBALS['config']['display'] as $display=>$defShapes) {
+                    if(in_array($shape, $defShapes)) {
+                        $defDisplay = $display;
+                        $foundDisplay = true;
+                    }
+                }
+                if ($foundDisplay) {
+                    $display = $defDisplay;
+                } else {
+                    $display = $GLOBALS["config"]['defaultDisplay'];
+                }
+                if(!isset($shapes[$display])) {
+                    $shapes[$display] = array();
+                }
+                $shapes[$display][] = $shape;
+            }
+            $pageBuilder->assign('displays', $displays);
+            $pageBuilder->assign('shapes', $shapes);
             $pageBuilder->renderPage("config.editshape");
         } 
     }
@@ -1082,7 +1109,7 @@ class router {
 
         //config route
         if(isset($_GET["config"])) {
-            config::route($this->pageBuilder);
+            config::route($this->pageBuilder, $this->posts);
             exit;
         }
 
@@ -1114,7 +1141,7 @@ class router {
         if(!file_exists('tpl/'.$reqDisplay.".html")) {
             $reqDisplay = $GLOBALS["config"]['defaultDisplay'];
         }
-        $this->pageBuilder->renderPage($reqDisplay);
+        $this->pageBuilder->renderPage("disp.".$reqDisplay);
 
     }
 

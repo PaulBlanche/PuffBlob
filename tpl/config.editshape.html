@@ -358,14 +358,15 @@
 <body>
 
 <div id="editlinkform">
+    {loop="shapes"}
     <div class="tagbox">
-        <label for="display1">Tags :</label><span draggable="true">TEst1</span><span draggable="true">TEst2</span>
+        <label for="display1">{$key} : </label>
+        {loop="$value"}
+        <span draggable="true">{$value}</span>
+        {/loop}
         <span class="dropHere">Drop Here</span>
     </div>
-    <div class="tagbox">
-        <label for="display2">Tags :</label><span draggable="true">TEst3</span><span draggable="true">TEst4</span>
-        <span class="dropHere">Drop Here</span>
-    </div>
+    {/loop}
 </div>
 </body>
 <script>
