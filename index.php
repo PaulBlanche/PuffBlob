@@ -2,12 +2,6 @@
 
 date_default_timezone_set('UTC');
 
-// USER CONFIG (will be moved in a config.php file)
-// admin/password, because fuck u security, ama testing.
-$GLOBALS["login"] = "admin";
-$GLOBALS["hash"] = "257ee883dbc54275bf4bed37db7d6609939e1df2";
-$GLOBALS["salt"] = "salt"; 
-$GLOBALS["disable_session_protection"] = false;
 $GLOBALS["config"]["DATADIR"] = "data";
 
 if(!is_dir($GLOBALS["config"]["DATADIR"])) {
@@ -817,6 +811,11 @@ class login {
             unset($_SESSION['privateonly']);
         }
     }
+
+    public static function passOK($password) {
+        $hash = hash("sha1", $password . $GLOBALS['login'] . $GLOBALS['salt']);
+        return ($GLOBALS['hash'] === $hash);
+    }
 }
 
 class ipBan {
@@ -944,6 +943,42 @@ class image {
     }
 }
 
+
+class config {
+
+    static public function route($pageBuilder) {
+        if($_GET['config'] === "changepwd") {
+            if(isset($_POST['newpassword']) && isset($_POST['oldpassword'])) {
+                self::changePassword($_POST['oldpassword'], $_POST['newpassword']);
+            } else {
+                $pageBuilder->assign('token', token::getToken());
+                $pageBuilder->renderPage("config.changepwd");
+            }
+        }
+    }
+
+    static public function changePassword($oldPass, $newPass) {
+        if(login::passOK($oldPass)) {
+            $GLOBALS['salt'] = sha1(uniqid('',true).'_'.mt_rand()); 
+            $GLOBALS['hash'] = hash("sha1", $newPass . $GLOBALS['login'] . $GLOBALS['salt']);
+            self::save();
+        } else {
+            die('wrong password');
+        }
+    }
+
+    static public function save() {
+        $config = '<?php $GLOBALS["login"] ='.var_export($GLOBALS['login'], true).";\n";
+        $config .= '$GLOBALS["salt"] ='.var_export($GLOBALS['salt'], true).";\n";
+        $config .= '$GLOBALS["hash"] ='.var_export($GLOBALS['hash'], true).";\n";
+        $config .= '$GLOBALS["disable_session_protection"] = false'.";\n";
+        $config .= "?>";
+
+        file_put_contents($GLOBALS['config']['CONF_FILE'], $config);
+    }
+
+}
+
 //___________________________________
 // router to call correct function
 class router {
@@ -1025,6 +1060,10 @@ class router {
             exit;
         }  
 
+        if(isset($_GET["config"])) {
+            config::route($this->pageBuilder);
+            exit;
+        }
         //addpost page (logged user)
         if(isset($_GET["addpost"])) { 
             $this->addPostPage();
@@ -1476,12 +1515,8 @@ function install() {
         $GLOBALS['login'] = $_POST['setLogin'];
         $GLOBALS['salt'] = sha1(uniqid('',true).'_'.mt_rand());
         $GLOBALS['hash'] = sha1($_POST['setPassword'].$GLOBALS['login'].$GLOBALS['salt']);
-
-        $config = '<?php $GLOBALS["login"] ='.var_export($GLOBALS['login'], true).";\n";
-        $config .= '$GLOBALS["salt"] ='.var_export($GLOBALS['salt'], true).";\n";
-        $config .= '$GLOBALS["hash"] ='.var_export($GLOBALS['hash'], true).";\n?>";
         
-        file_put_contents($GLOBALS['config']['CONF_FILE'], $config);
+        config::save();
         login::check($_POST['setPassword'], $GLOBALS['login']);        
     }
     exit;
