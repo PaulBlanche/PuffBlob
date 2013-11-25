@@ -496,7 +496,7 @@
 
         function renderPreview() {
             var xhr = new XMLHttpRequest();
-            xhr.open("POST", "index.php", true);
+            xhr.open("POST", "index.php?addpost", true);
             xhr.onreadystatechange = function(evt) {
                 if(xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 0)) {
                     document.getElementById("previewBlock").innerHTML = xhr.responseText;
@@ -619,7 +619,7 @@
 
         analyse.addEventListener("click", function(){
             var xhr = new XMLHttpRequest();
-            xhr.open("POST", "index.php", true);
+            xhr.open("POST", "index.php?addpost", true);
             xhr.onreadystatechange = function(evt) {
                 if(xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 0)) {
                     console.log(xhr.responseText);
@@ -628,7 +628,8 @@
                     data.meta.keywords = analysis.keywords;
                     data.meta.lang = analysis.lang;
                     var shapes = analysis.shapes || [{shape:''}];
-                    document.getElementById('shapes').value = shapes[0]['shape'];
+                    var firstShape = shapes[0] || {shape:''};
+                    document.getElementById('shapes').value = firstShape['shape'];
                     send.style.display = "block";
                 }
             }
@@ -719,7 +720,7 @@
             formData.append('data', JSON.stringify(data));
 
             var xhr = new XMLHttpRequest();
-            xhr.open("POST", "index.php", true);
+            xhr.open("POST", "index.php?addpost", true);
             xhr.onreadystatechange = function (evt) {
                 if (xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 0)) {
                     document.getElementById("result").innerHTML = xhr.responseText;

@@ -529,7 +529,7 @@
 
         function renderPreview() {
             var xhr = new XMLHttpRequest();
-            xhr.open("POST", "index.php", true);
+            xhr.open("POST", "index.php?edit=edit", true);
             xhr.onreadystatechange = function(evt) {
                 if(xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 0)) {
                     document.getElementById("previewBlock").innerHTML = xhr.responseText;
@@ -727,7 +727,7 @@
             formData.append('edit', "");
 
             var xhr = new XMLHttpRequest();
-            xhr.open("POST", "index.php", true);
+            xhr.open("POST", "index.php?edit=edit", true);
             xhr.onreadystatechange = function (evt) {
                 if (xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 0)) {
                     console.log(xhr.responseText);

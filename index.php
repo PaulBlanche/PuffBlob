@@ -211,7 +211,7 @@ class postDB implements Iterator, Countable, ArrayAccess {
     private function check() {
         if (!file_exists($GLOBALS["config"]["DATABASE"])) {
             $this->posts = array();
-            $timestamp = microtime(true);
+            $timestamp = round(microtime(true));
             $post = array(
                 "title" => "this is the title",
                 "date" => $timestamp,
@@ -905,16 +905,16 @@ class image {
 
     // open image according to extension. If stupid people rename gif to jpg they deserve it.
     // resize it to 120*120 (absolute 120 in width, 120 in height when it can)
-    static function makeThumb($filepath, $mimeType, $width = 120) {
+    static function makeThumb($filepath, $mimeType, $width = 300) {
         switch($mimeType) {
             case "image/jpeg":
                 $ims = imagecreatefromjpeg($filepath);
                 break;
             case "image/gif":
-                $ims = imagecreatefromjpeg($filepath);
+                $ims = imagecreatefromgif($filepath);
                 break;
             case "image/png":
-                $ims = imagecreatefromjpeg($filepath);
+                $ims = imagecreatefrompng($filepath);
                 break;
             default:
                 return false;
@@ -923,7 +923,7 @@ class image {
         $w = imagesx($ims);
         $h = imagesy($ims);
         $dw = $width;
-        $dh = min(floor($h / $w * $dw), 120);
+        $dh = min(floor($h / $w * $dw), $width);
         $sy = 0;
         $sw = $w;
         $sh = $h;
@@ -1079,7 +1079,6 @@ class router {
 
         // Add/Edit posts
         if(isset($_GET["addpost"]) || isset($_GET["edit"])) {
-
             // preview request sent
             if(isset($_POST["preview"])) { 
                 echo $this->parser->transform($_POST['text']);
@@ -1149,7 +1148,7 @@ class router {
         }
         $this->buildLinkList($reqShape);
         $this->pageBuilder->assign('token', token::getToken());
-        if(!file_exists('tpl/'.$reqDisplay.".html")) {
+        if(!file_exists('tpl/disp.'.$reqDisplay.".html")) {
             $reqDisplay = $GLOBALS["config"]['defaultDisplay'];
         }
         $this->pageBuilder->renderPage("disp.".$reqDisplay);
@@ -1413,8 +1412,8 @@ class router {
                 "tags" => $tags,
                 "keywords" => $keywords,
                 "rawText" => tokenize($title + " " + $filename),
-                "mimeType" => $GLOBALS['mime'][$ext],
-                "contentType" => $contentType
+                "mimeType" => array($GLOBALS['mime'][$ext]),
+                "contentType" => array($contentType)
             );
             $classifier->teach($data, $shapes);
             $classifier->save();
@@ -1464,8 +1463,8 @@ class router {
             "tags" => $tags,
             "keywords" => $keywords,
             "rawText" => tokenize($rawText),
-            "mimeType" => $mimeType,
-            "contentType" => $contentType
+            "mimeType" => array($mimeType),
+            "contentType" => array($contentType)
         );
         $shapes = $classifier->guess($data);
 
@@ -1473,7 +1472,7 @@ class router {
             "keywords" => $keywords,
             "lang" => key($postLang),
             "tags" => $tags,
-            "mimeType" => $shapes
+            "shapes" => $shapes
         );
 
 
