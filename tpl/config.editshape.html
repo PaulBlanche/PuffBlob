@@ -150,7 +150,7 @@
         right: 6px;
         height: 100%;
     }
-    .tagbox label {
+    .tagbox label, .tagbox p {
         display: table-cell;
         margin:5px 2px;
         height:20px;
@@ -169,10 +169,10 @@
         color: #fff;
         border-radius: 4px;
         position:relative;
-        display:table-cell;
+        visibility:hidden;
         margin-bottom: -3px;
         background-color:transparent;
-        opacity: 0.6;
+        opacity: 0.4;
     }
 
     .tagbox > span{
@@ -360,23 +360,53 @@
 <div id="editlinkform">
     {loop="shapes"}
     <div class="tagbox">
-        <label for="display1">{$key} : </label>
+        <p>{$key}</p>
         {loop="$value"}
         <span draggable="true">{$value}</span>
         {/loop}
         <span class="dropHere">Drop Here</span>
     </div>
     {/loop}
-</div>
+    <div class="buttonWrapper">
+        <button id="send">Send</button>
+    </div>
+</div>    <div id="result"></div>
+
 </body>
 <script>
+    document.getElementById("send").onclick = function() {
+        var tagboxes = document.querySelectorAll('.tagbox');
+        data = {};
+        [].forEach.call(tagboxes, function (tagbox) {
+            var display = tagbox.querySelector('p').innerHTML;
+            var shapesElm = tagbox.querySelectorAll('span:not(.dropHere)');
+            var shapes = [];
+            [].forEach.call(shapesElm, function (shapeElm) {
+                shapes.push(shapeElm.innerHTML);
+            });
+            data[display] = shapes;
+        });
+        var formData = new FormData();
+        formData.append('editshape', "");
+        formData.append('data', JSON.stringify(data));
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "index.php?config=editshape", true);
+        xhr.onreadystatechange = function(evt) {
+            if(xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 0)) {
+                document.getElementById("result").innerHTML = xhr.responseText;
+            }
+        }
+        xhr.send(formData);
+
+    }
+
     function handleDragStart(e) {
         this.style.opacity = '0.4';
         dragSrcEl = this;
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/html', this.innerHTML);
         [].forEach.call(dropboxes, function (dropbox) {
-            dropbox.style.display = "table-cell";
+            dropbox.style.visibility = "visible";
         });
     }
 
@@ -406,7 +436,7 @@
             this.parentNode.appendChild(dropHere);
         }
         [].forEach.call(dropboxes, function (dropbox) {
-            dropbox.style.display = "none";
+            dropbox.style.visibility = "hidden";
         });        
         return false;
     }

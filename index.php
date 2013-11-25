@@ -37,13 +37,14 @@ $GLOBALS["mime"] = array(
     "" => "",
 );
 
-// SHAPE PARAMETERS
+// DEFAULT SHAPES AND DISPLAY
 $GLOBALS['config']['display'] = array( // display => shapes
     "blog" => array("blog", "all"), 
     "galerie" => array("wallpaper"),
     "links" => array("shaarli")
 );
 $GLOBALS['config']['defaultDisplay'] = "blog";
+
 
 $GLOBALS["title"] = "MyPuffBlob";
 
@@ -957,34 +958,41 @@ class config {
         }
 
         if($_GET['config'] === 'editshape') {
-            $allDisplay = glob('tpl/disp.*.html');
-            $displays = array();
-            foreach($allDisplay as $path) {
-                $displays[] = preg_replace('/tpl\/disp.(.*).html/', "$1", $path);
-            }
-            $allshapes = $posts->allShapes();
-            $shapes = array();
-            foreach($allshapes as $shape) {
-                $foundDisplay = false;
-                foreach($GLOBALS['config']['display'] as $display=>$defShapes) {
-                    if(in_array($shape, $defShapes)) {
-                        $defDisplay = $display;
-                        $foundDisplay = true;
+            if(isset($_POST["editshape"])) {
+                $data = json_decode($_POST['data'], true);
+                var_dump($data);
+                $GLOBALS['config']['display'] = $data;
+                self::save();
+            } else {
+                $allDisplay = glob('tpl/disp.*.html');
+                $displays = array();
+                foreach($allDisplay as $path) {
+                    $displays[] = preg_replace('/tpl\/disp.(.*).html/', "$1", $path);
+                }
+                $allshapes = $posts->allShapes();
+                $shapes = array();
+                foreach($allshapes as $shape) {
+                    $foundDisplay = false;
+                    foreach($GLOBALS['config']['display'] as $display=>$defShapes) {
+                        if(in_array($shape, $defShapes)) {
+                            $defDisplay = $display;
+                            $foundDisplay = true;
+                        }
                     }
+                    if ($foundDisplay) {
+                        $display = $defDisplay;
+                    } else {
+                        $display = $GLOBALS["config"]['defaultDisplay'];
+                    }
+                    if(!isset($shapes[$display])) {
+                        $shapes[$display] = array();
+                    }
+                    $shapes[$display][] = $shape;
                 }
-                if ($foundDisplay) {
-                    $display = $defDisplay;
-                } else {
-                    $display = $GLOBALS["config"]['defaultDisplay'];
-                }
-                if(!isset($shapes[$display])) {
-                    $shapes[$display] = array();
-                }
-                $shapes[$display][] = $shape;
+                $pageBuilder->assign('displays', $displays);
+                $pageBuilder->assign('shapes', $shapes);
+                $pageBuilder->renderPage("config.editshape");
             }
-            $pageBuilder->assign('displays', $displays);
-            $pageBuilder->assign('shapes', $shapes);
-            $pageBuilder->renderPage("config.editshape");
         } 
     }
 
@@ -999,10 +1007,13 @@ class config {
     }
 
     static public function save() {
+
         $config = '<?php $GLOBALS["login"] ='.var_export($GLOBALS['login'], true).";\n";
         $config .= '$GLOBALS["salt"] ='.var_export($GLOBALS['salt'], true).";\n";
         $config .= '$GLOBALS["hash"] ='.var_export($GLOBALS['hash'], true).";\n";
         $config .= '$GLOBALS["disable_session_protection"] = false'.";\n";
+        $config .= '$GLOBALS["config"]["display"] = '.var_export($GLOBALS['config']['display'], true).";\n";
+        $config .= '$GLOBALS["config"]["defaultDisplay"] = "blog"'.";\n";
         $config .= "?>";
 
         file_put_contents($GLOBALS['config']['CONF_FILE'], $config);
