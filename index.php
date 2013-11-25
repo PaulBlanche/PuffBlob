@@ -979,6 +979,11 @@ class config {
 
 }
 
+class postGestion {
+
+}
+
+
 //___________________________________
 // router to call correct function
 class router {
@@ -995,26 +1000,31 @@ class router {
     }
 
     public function route() {
-        // capture postlist modifiers (page, search tags ... )
+        // capture post list modifiers (page, search tags ... )
         if(isset($_GET["page"])) {
             $this->page = $_GET["page"];
             unset($_GET["page"]);
         }
 
-        //posting login form
-        if(isset($_POST["login"])) {
-            $this->validateLogin();
-            exit;
-        }
-        //login page
+        //login
         if(isset($_GET["login"])) { 
-            $this->loginPage(($_GET["login"] === "")? 1 : 0);
+            //login request sent
+            if(isset($_POST["login"])) {
+                $this->validateLogin();
+            //login page
+            } else {
+                $this->loginPage(($_GET["login"] === "")? 1 : 0);
+            }
             exit;
         }
+
+        //File download
         if(isset($_GET["file"])) {
             $this->getFile($_GET["file"]);
             exit;
         }
+
+        //Shape display
         if(isset($_GET["shape"]) && empty($_POST)) {
             $this->displayShape($_GET["shape"]);
             exit;
@@ -1024,63 +1034,67 @@ class router {
             exit;
         }
 
-        // other route for non-logged users
+        //Redirect to login page for non-logged users.
         if(!login::isLoggedIn()) {
             $this->loginPage(1);
             exit;
         }
 
-        //posting post form (logged user)
-        if(isset($_POST["post"])) { 
-            $this->sendPost();
-            exit;
+        // Add/Edit posts
+        if(isset($_GET["addpost"]) || isset($_GET["edit"])) {
+
+            // preview request sent
+            if(isset($_POST["preview"])) { 
+                echo $this->parser->transform($_POST['text']);
+                exit;
+            } 
+            // post request sent
+            if(isset($_POST["post"])) { 
+                $this->sendPost();
+                exit;
+            }
+            // edit request sent
+            if(isset($_POST["edit"])) { 
+                $this->sendPost();
+                exit;
+            } 
+            // analysis request sent
+            if(isset($_POST["analyse"])) { 
+                $this->analysePost();
+                exit;
+            }       
+            // new post page   
+            if(isset($_GET["addpost"])) {
+                $this->addPostPage();
+                exit;
+            }
+            // edit post page
+            if(isset($_GET["edit"])) {
+                $this->editPost($_GET['date']);
+                exit;
+            }
         }
-        //posting post form (logged user)
+
+        //delete request sent
         if(isset($_POST["delete"])) { 
             $this->deletePost();
             exit;
-        }  
-        //posting edit form (logged user)
-        if(isset($_POST["edit"])) { 
-            $this->sendPost();
-            exit;
-        }  
-        //posting analysis request (logged user)
-        if(isset($_POST["analyse"])) { 
-            //var_dump($_POST);
-            //var_dump($_FILES);
-            $this->analysePost();
-            exit;
-        }  
-        //posting preview request (logged user)
-        if(isset($_POST["preview"])) { 
-            //var_dump($_POST);
-            //var_dump($_FILES);
-            echo $this->parser->transform($_POST['text']);
-            exit;
-        }  
+        }   
 
+        //config route
         if(isset($_GET["config"])) {
             config::route($this->pageBuilder);
             exit;
         }
-        //addpost page (logged user)
-        if(isset($_GET["addpost"])) { 
-            $this->addPostPage();
-            exit;
-        }
-        //login page
+
+        //logout request sent
         if(isset($_GET["logout"])) { 
             $this->sendLogout();
             exit;
         }
-        //edit page
-        if(isset($_GET["edit"])) { 
-            $this->editPost($_GET['date']);
-            exit;
-        }
 
-        $this->postList();
+        // Default route (display default shape)
+        $this->displayShape("all");
         exit;
     } 
 
