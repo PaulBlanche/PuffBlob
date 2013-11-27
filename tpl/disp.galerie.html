@@ -1,58 +1,206 @@
 <!DOCTYPE html>
 <html>
 <head>{include="includes"}
+<style>
+    * {
+        -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+        -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+        box-sizing: border-box;         /* Opera/IE 8+ */
+    }
+    html{
+        height:100%;
+        width:100%;
+        font-size:16px;
+        font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;
+    }
+    body{
+        margin:0;
+        padding:0;
+        height:100%;
+        width:100%;
+        background-color: rgb(231,231,231);
+    }
+
+    @font-face {
+        font-family: 'snicklesregular';
+        src: url('tpl/font/snickles-webfont.eot');
+        src: url('tpl/font/snickles-webfont.eot?#iefix') format('embedded-opentype'),
+             url('tpl/font/snickles-webfont.woff') format('woff'),
+             url('tpl/font/snickles-webfont.ttf') format('truetype'),
+             url('tpl/font/snickles-webfont.svg#snicklesregular') format('svg');
+        font-weight: normal;
+        font-style: normal;
+
+    }
+
+/*#####################################
+#   HEADER
+#####################################*/
+
+    #header {
+        font-family: 'snicklesregular';
+        background-color: rgb(46, 50, 55);
+    }
+
+    #header h1{
+        margin:0;
+        padding:1rem;
+        font-size: 2rem;
+        opacity:0.8;
+        box-shadow: 0px 0px 10px rgb(0, 0, 0);
+    }
+    #header img {
+        height:2rem;
+    }
+    #header a{
+        color:#FFF;
+        text-decoration: none;
+    } 
+
+/*#####################################
+#   FOOTER
+#####################################*/
+
+    #footer{
+        box-shadow: 0px 0px 10px rgb(0, 0, 0);
+        position: relative;
+        z-index:19;
+        
+    }
+
+
+/*#####################################
+#   PAGINATION
+#####################################*/
+
+    .pagination {
+        background-color: rgb(66, 70, 75);
+        padding:10px;
+        font-size: 0.8rem;
+        text-align: center;
+        width:120%;
+        margin-left:-10%;
+    }
+    .pagination a {
+        text-decoration: none;
+        color:#AAA;
+    }
+    .pagination span {
+        color:#AAA;
+        margin:0 20px;
+    }
+
+/*#####################################
+#   GALERIE
+#####################################*/
+    
+    #posts {
+        padding: 10px;
+        box-shadow: 0px 0px 10px rgb(0, 0, 0);
+        position: relative;
+        z-index:19;
+    }
+    #posts:after {
+        content:"";
+        display: block;
+        clear: both;
+    }
+
+    h2.shapeTitle {
+        margin:0;
+        padding:10px;
+        font-size: 1.2rem;
+        text-transform: uppercase;
+        background-color: rgb(231,231,231);
+        box-shadow: 0px 0px 10px rgb(0, 0, 0); 
+        color:#000;
+        position: relative;
+        z-index:20;
+    }
+
+    #posts .post {
+        float:left;
+        position: relative;
+        margin:10px;
+        width:200px;
+        height:200px;
+    }
+    #posts a  {
+        margin:0;
+        padding:0;
+        border:0;
+    }
+    #posts .post h3 {
+        position: absolute;
+        bottom:10px;
+        margin:0;
+        padding:0;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+        font-family: Arial, Arial, Helvetica, sans-serif;
+        background-color:#FFF;
+        color:#000;
+        opacity: 0.55;
+        font-weight: normal;
+        font-size: 1rem;
+        width:0;
+    }
+    #posts .post:hover h3{
+        width:100%;
+        padding:2px 10px;
+    }
+    #posts .post .linkeditbuttons {
+        position: absolute;
+        height:0;
+        overflow: hidden;
+    }
+    #posts .post:hover .linkeditbuttons {
+        height:auto;
+    }
+    #posts .post form {
+        float: left;
+    }
+</style>
 </head>
 <body>
 
-<div id="pageheader">
+<div id="header">
     {include="page.header"}
+</div>
 
-</div>ANUS
-
-    <div id="navig">
-        <a href="#" style="background-color:#ac1d1d"><span>blog</span></a>
-        <a href="#" style="background-color:#188e24"><span>galerie</span></a>
-        <a href="#" style="background-color:#184a8e"><span>micro-blog</span></a>
-        <a href="#" style="background-color:#7c188e"><span>videos</span></a>
-    </div>
-
+{include="page.pagination"}
+<h2 class="shapeTitle">Shape : {$shape} (gallerie)</h2>
 <div id="posts">
-        {loop="posts"}
-        <div class="post {if="$value.meta.contentLength > 1000"}long{/if}">
-            {if="login::isLoggedIn()"}
-            <div class="linkeditbuttons">
-                <form method="GET" class="buttoneditform">
-                    <input type="hidden" name="date" value="{$value.date}">
-                    <input type="submit" value="edit" name="edit">
-                </form>
-                <form method="POST" class="buttoneditform">
-                    <input type="hidden" name="date" value="{$value.date}">
-                    <input type="hidden" name="token" value="{$token}">
-                    <input type="submit" value="delete" name="delete">
-                </form>
-            </div>
-            {/if}
-            <h1 class="title">{$value.title ? $value.title : "Sans titre"}</h1>
-            <span class="date">{$value.date|formatDate:'l j F Y \à H:i'}{if="login::isLoggedIn()"} ({$value.privacy}){/if}</span>
-            {if="$value.meta.contentType==='text'"}
-                <div class="content">{$value.content}</div>
-            {else}
-            <img src="{$value.file|thumbULR}" />
-                <a class="contentlink" href="?file={$value.date}" >{$value.meta.filename}</a>
-                <div class="content">{$value.description}</div>
-            {/if}
-            <span class="tags"> Tags : 
-            {loop="$value.meta.tags"}
-                <span>{$value}</span>
-            {/loop}
-            </span>
-
+    {loop="posts"}
+    <div class="post {if="$value.meta.contentLength > 1000"}long{/if}">
+        {if="login::isLoggedIn()"}
+        <div class="linkeditbuttons">
+            <form method="GET" class="buttoneditform">
+                <input type="hidden" name="date" value="{$value.date}">
+                <input type="submit" value="edit" name="edit">
+            </form>
+            <form method="POST" class="buttoneditform">
+                <input type="hidden" name="date" value="{$value.date}">
+                <input type="hidden" name="token" value="{$token}">
+                <input type="submit" value="delete" name="delete">
+            </form>
         </div>
+        {/if}
+        {if="isType($value.meta.mimeType, 'image')"}
+        <a href="{$value.file}"><img src="{$value.file|thumbULR}" /></a>
+        {/if}
+        <h3>{$value.title}</h3>
+    </div>
     {/loop}
 
 </div>
 
+{include="page.pagination"}
+
+<div id="footer">
     {include="page.footer"} 
+</div>
 
 </body>
 </html>

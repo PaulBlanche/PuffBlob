@@ -905,7 +905,7 @@ class image {
 
     // open image according to extension. If stupid people rename gif to jpg they deserve it.
     // resize it to 120*120 (absolute 120 in width, 120 in height when it can)
-    static function makeThumb($filepath, $mimeType, $width = 300) {
+    static function makeThumb($filepath, $mimeType, $width = 200) {
         switch($mimeType) {
             case "image/jpeg":
                 $ims = imagecreatefromjpeg($filepath);
@@ -922,17 +922,15 @@ class image {
         }
         $w = imagesx($ims);
         $h = imagesy($ims);
+        $sw = ($h < $w) ? $h : $w;
+        $sh = $sw;
+        $sx = ($h < $w) ? ($w - $h) / 2 : 0;
+        $sy = ($h < $w) ? 0 : ($h - $w) /2;
         $dw = $width;
-        $dh = min(floor($h / $w * $dw), $width);
-        $sy = 0;
-        $sw = $w;
-        $sh = $h;
-        if($h>$w) {
-            $sy = ($h-$w)/2;
-            $sh = $w; 
-        }
+        $dh = $width;
+
         $imd = imagecreatetruecolor($dw, $dh);
-        imagecopyresampled($imd, $ims, 0, 0, 0, $sy, $dw, $dh, $sw, $sh);
+        imagecopyresampled($imd, $ims, 0, 0, $sx, $sy, $dw, $dh, $sw, $sh);
         imageinterlace($imd, true); // progressive jpg
 
         $info = pathinfo($filepath);
@@ -1041,6 +1039,8 @@ class router {
         if(isset($_GET["page"])) {
             $this->page = $_GET["page"];
             unset($_GET["page"]);
+        } else {
+            $this->page = 0;
         }
 
         //login
@@ -1252,6 +1252,9 @@ class router {
 
         $this->pageBuilder->assign('prevPageURL', $prevPageURL);
         $this->pageBuilder->assign('nextPageURL', $nextPageURL);
+        $this->pageBuilder->assign('pageNum', $pageNum);
+        $this->pageBuilder->assign('pageCount', $pagecount);
+        $this->pageBuilder->assign('shape', $shape);
 
 
         $token = '';
@@ -1570,6 +1573,11 @@ function install() {
         login::check($_POST['setPassword'], $GLOBALS['login']);        
     }
     exit;
+}
+
+function isType($mimeType, $type) {
+    $explode = explode('/', $mimeType);
+    return $explode[0] === $type;
 }
 
 function tokenize($text) {

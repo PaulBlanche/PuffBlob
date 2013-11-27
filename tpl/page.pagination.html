@@ -1,5 +1,10 @@
-    <div>
-        <a href="{$nextPageURL}">Next</a>
-        <a href="{$prevPageURL}">Previous</a>
+    <div class="pagination">
+        {if="$nextPageURL !== ''"}
+        <a href="{$nextPageURL}">◄ Older</a>
+        {/if} 
+        <span>page {$pageNum} / {$pageCount}</span>
+        {if="$prevPageURL !== ''"}
+        <a href="{$prevPageURL}">Newer ►</a>
+        {/if}
     </div>
 
