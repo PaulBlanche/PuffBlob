@@ -4,33 +4,26 @@
 </head>
 <body>
 
-<div id="pageheader">
+<div id="header">
     {include="page.header"}
-
 </div>
 
-    <div id="navig">
-        <a href="#" style="background-color:#ac1d1d"><span>blog</span></a>
-        <a href="#" style="background-color:#188e24"><span>galerie</span></a>
-        <a href="#" style="background-color:#184a8e"><span>micro-blog</span></a>
-        <a href="#" style="background-color:#7c188e"><span>videos</span></a>
-    </div>
-
-    {include="page.pagination"}
-
-<div id="posts">
+{include="page.pagination"}
+<div id="blogContent">
+    <h2 class="shapeTitle">Shape : {$shape}</h2>
+    <div id="posts">
         {loop="posts"}
         <div class="post {if="$value.meta.contentLength > 1000"}long{/if}">
             {if="login::isLoggedIn()"}
             <div class="linkeditbuttons">
                 <form method="GET" class="buttoneditform">
                     <input type="hidden" name="date" value="{$value.date}">
-                    <input type="submit" value="edit" name="edit">
+                    <input class="edit" type="submit" value="edit" name="edit">
                 </form>
                 <form method="POST" class="buttoneditform">
                     <input type="hidden" name="date" value="{$value.date}">
                     <input type="hidden" name="token" value="{$token}">
-                    <input type="submit" value="delete" name="delete">
+                    <input class="delete" type="submit" value="delete" name="delete">
                 </form>
             </div>
             {/if}
@@ -39,23 +32,25 @@
             {if="$value.meta.contentType==='text'"}
                 <div class="content">{$value.content}</div>
             {elseif="$value.meta.contentType==='url'"}
-                <div class="content"><a href="{$value.content}">{$value.content}</a>{$value.description}</div>
+                <div class="content"><a class="contentlink" href="{$value.content}">{$value.content}</a>{$value.description}</div>
             {else}
-                <a class="contentlink" href="?file={$value.date}" >{$value.meta.filename}</a>
-                <div class="content">{$value.description}</div>
+                <div class="content"><a class="contentlink" href="?file={$value.date}" >{$value.meta.filename}</a>{$value.description}</div>
             {/if}
             <span class="tags"> Tags : 
             {loop="$value.meta.tags"}
                 <span>{$value}</span>
             {/loop}
             </span>
-
         </div>
-    {/loop}
+        {/loop}
 
+    </div>
 </div>
+{include="page.pagination"}
 
+<div id="footer">
     {include="page.footer"} 
+</div>
 
 </body>
 </html>
