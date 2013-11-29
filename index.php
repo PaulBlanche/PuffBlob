@@ -59,7 +59,9 @@ $GLOBALS["UPLOAD_ERROR"] = array(
 
 define('PHPPRE','<?php /* '); // Prefix to encapsulate data in php code.
 define('PHPSUF',' */ ?>'); // Suffix to encapsulate data in php code.
-define('THMBSUF','_tmb'); // Suffix to encapsulate data in php code.
+define('THMBSUF','_tmb'); // Suffix to thumbnails.
+define('VERSION_NUMBER','0.0.1'); // PuffBlob version.
+define('VERSION_DATE','2013-11-28'); // PuffBlob version.
 
 // Force cookie path (but do not change lifetime)
 $cookie = session_get_cookie_params();
@@ -762,6 +764,8 @@ class pageBuilder {
     private function initialize() {
         $this->tpl = new RainTPL;
         $this->tpl->assign('puffblobTitle', empty($GLOBALS['title']) ? 'PuffBlob': $GLOBALS['title'] );
+        $this->tpl->assign('vNumber', VERSION_NUMBER);
+        $this->tpl->assign('vDate', VERSION_DATE);
         return;
     }
 
