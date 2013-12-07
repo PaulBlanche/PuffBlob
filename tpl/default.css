@@ -15,6 +15,7 @@
         height:100%;
         width:100%;
         background-color: rgb(46, 50, 55);
+        overflow-x:hidden;
     }
 
     @font-face {
@@ -38,6 +39,10 @@
         color:#fff;
     }
 
+    a{
+        text-decoration: none;
+    }
+
 
 /*#####################################
 #   HEADER
@@ -47,18 +52,27 @@
     DEFAULT             */
 
     #header {
-        font-family: 'snicklesregular';
         background-color: rgb(46, 50, 55);
+        position: relative;
+        padding:0.5rem;
+    }
+    #header:after {
+        content:"";
+        display: block;
+        clear:both;
     }
 
     #header h1{
-        margin:0;
-        padding:1rem;
-        font-size: 2rem;
+        font-family: 'snicklesregular';
+        margin:0.5rem 1rem 0.5rem 0;
+        font-size: 2.1rem;
+        display: inline-block;
+        float:left;
+        padding:0.5rem 1rem 0.5rem 0.5rem;
     }
 
-    #header img {
-        height:2rem;
+    #header h1 img {
+        height:2.1rem;
         margin-bottom:-2px 
     }
     #header a{
@@ -69,6 +83,108 @@
     } 
     #header a:hover {
         opacity: 1;
+    }
+    #header h2{
+        margin:0.2rem 0 0.4rem 0;
+        display: inline-block;
+        font-size: 1.1rem;
+        font-style: italic;
+        background: rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 0 5px #000;
+        padding:3px 8px;
+        border-radius: 10px;
+    }
+    #header h2 img {
+        display: none;
+        margin-bottom:-3px;
+    }
+    #header #admin{
+        display: inline;
+        float:right;
+    }
+    #header #admin a, #header #admin #config {
+        color:#FFF;
+        text-decoration: none;
+        opacity:0.8;
+        transition: opacity 0.3s;
+        opacity:0.5;
+        padding:100px 3px 5px 3px;
+        border: 1px solid #555;
+    }
+    #header #admin a:hover, #header #admin #config:hover  {
+        opacity:1;
+        border: 1px solid #999;
+        background: rgb(76, 80, 85);
+    }
+    #header #admin a span, #header #admin #config span {
+        padding:5px;
+    }
+    #header #admin a img, #header #admin #config img {
+        margin:0 5px;
+    }
+    #header #configMenu {
+        position: absolute;
+        right:0;
+        margin:4px 8px;
+        padding:0;
+        list-style: none;
+        z-index:20;
+        background-color: rgb(46, 50, 55);
+        max-height:0;
+        transition: max-height 0.3s;
+        overflow: hidden;
+        opacity: 1;
+        padding: 0 8px;
+        box-shadow: 0px 7px 10px #000;
+    }
+     #header #configMenu li a {
+        padding:0;
+        margin:0;
+        border:none;
+     }
+     #header #configMenu li a:hover {
+        padding:0;
+        margin:0;
+        border:none;
+     }
+    #header #configMenu li {
+        padding:8px 0;
+        opacity: 0.6;
+        border-bottom: 1px solid rgb(96, 100, 105);
+    }
+    #header #configMenu li:hover {
+        background-color: rgb(76, 80, 85);
+        opacity: 1;
+        padding:8px;
+        margin:0 -8px;
+    }
+    #header #configMenu li:last-child {
+        border-bottom: 0px solid #FFF
+    }
+    #header #config:hover #configMenu {
+        border: 1px solid #999;
+        max-height:100px;
+    }
+    #header #config:hover {
+        box-shadow: 0px 7px 10px #000;
+
+    }
+    #header #shapes {
+        display: inline;
+        padding-top:0.4rem;
+    }
+    #header #shapes a {
+        padding:3px 8px;
+        border-radius: 10px;
+        border: 1px solid  rgba(43, 152, 255, 0.5);
+        background-color: rgba(43, 152, 255, 0.2);
+        display: inline-block;
+        margin: 3px 0;
+    }
+    #header #shapes a:hover {
+        border: 1px solid  rgba(43, 152, 255, 0.8);
+        background-color: rgba(43, 152, 255, 0.5);
     }
 
 /*________________________
@@ -102,6 +218,31 @@
         opacity: 1;
     }
 
+/*________________________
+    RESPONSIVNESS       */
+
+@media screen and (max-width: 799px) {
+    #admin a span, #admin #config span {
+        display:none;
+    }
+    #admin img {
+        width:20px;
+        height:20px;
+    }
+}
+
+@media screen and (max-width: 420px) {
+    #header h1 {
+        display: none;
+    }
+    #navig h2 img {
+        display: inline;
+        height:1.1rem;
+        margin-right:13px;
+    }
+}
+
+
 /*#####################################
 #   FOOTER
 #####################################*/
@@ -121,7 +262,7 @@
     .pagination {
         background-color: rgb(66, 70, 75);
         padding:10px;
-        font-size: 0.8rem;
+        font-size: 0.9rem;
         text-align: center;
         width:120%;
         margin-left:-10%;
@@ -142,54 +283,104 @@
 #   CONTENT
 #####################################*/
 
-
+    h2.shapeTitle {
+        font-size: 1.2rem;
+        color:#000;
+        opacity: 0.8;
+        border-bottom: 1px solid #555;
+        margin:0;
+        padding: 10px;
+    }
 
 /*________________________
     BLOG                */
 
     #blogContent {
-        background-color: rgb(231,231,231);
-        padding:20px 0 10px 0;
+        background-color: rgb(255,255,250);
     }
-
     #blogContent .post {
-        width:700px;
-        background-color: rgb(255,255,255);
-        margin:30px auto;
-        padding:20px 40px;
+        width:100%;
+        padding:0 20px 0 40px;
+        border-bottom: 1px solid #333
     }
-
-    #blogContent h2.shapeTitle {
-        margin:0;
-        padding:0px 30px 0px 20px;
-        font-size: 1.5rem;
-        color:#555;
-        background-color: rgb(231,231,231);
-        border-bottom: 2px solid #888;
-        display: inline-block;
+    #blogContent .post:after {
+        content:"";
+        display: block;
+        clear: both;
     }
-    #blogContent .post h1 {
+    #blogContent .post.odd{
+        background-color: rgba(55, 46, 46, 0.08);
+    }
+    #blogContent .post h1{
         margin:0;
-        padding:0;
-        color:#000;
-        font-weight: normal;
-        font-size: 2rem;
+        padding:20px 0 0 0 ;
+        color:rgb(50, 110, 250);
+        font-weight: bold;
+        font-size: 1.4rem;
         transition-property:width,padding;
         transition-duration: 0.2s;
     }
-    #blogContent .post .date {
-        display: block;
+    #blogContent .post h1 a{
+        color:rgb(50, 110, 250);
+    }
+    #blogContent .post h1 a:visited{
+        color:rgb(50, 110, 250);
     }
     #blogContent .content {
-        padding:20px 0;
+        padding:0px 0px;
+        max-height:20rem;
+        overflow-y:auto;
     }
 
+    #blogContent .imgLink {
+        float:right;
+        padding:10px 10px;
+    }
+    #blogContent .imgLink img {
+        display:block;
+        width: 200px;
+        height: 200px;
+    }
+    #blogContent .date {
+        font-size: 0.9rem;
+        color: rgb(216, 122, 43);
+        display: block;
+        margin-top:3px;
+    }
+    #blogContent .tags span{
+        border: 1px solid rgba(50, 110, 250, 0.5);
+        background-color: rgba(50, 110, 250, 0.1);
+        box-shadow: 0 0 5px rgba(46, 50, 55, 0.5);
+        padding:3px;
+        margin:2px;
+        white-space: nowrap;
+        display: inline-block;
+    }
+    #blogContent .tags {
+        display: block;
+        margin:10px 0;
+    }
+    #blogContent .tags span:before{
+        background: url("img/tag.png") transparent center center no-repeat;
+        background-size: 16px 16px;
+        display: inline-block;
+        width:16px;
+        height:16px;
+        content:"";
+        position: relative;
+        top:3px;
+        margin-right:5px;
+    }
+
+
+    /* EDIT/DELETE BUTTON */
     #blogContent #posts .post .linkeditbuttons {
         position: absolute;
         max-width:0;
         overflow: hidden;
         transition:max-width 0.2s;
         margin-left:-40px;
+        margin-top:15px;
     }
     #blogContent #posts .post:hover .linkeditbuttons {
         max-width:50px;
@@ -205,11 +396,11 @@
         transition:background-size 0.2s;
     }
     #blogContent #posts input.edit {
-        background: url("img/edit.png") #FFF center center no-repeat;
+        background: url("img/edit.png") transparent center center no-repeat;
         background-size: 16px 16px;
     }
     #blogContent #posts input.delete {
-        background: url("img/delete.png") #FFF center center no-repeat;
+        background: url("img/delete.png") transparent center center no-repeat;
         background-size: 16px 16px;
     }
     #blogContent #posts input:hover {
@@ -220,6 +411,7 @@
 
 /*________________________
     GALERIE             */
+
     #galContent {
         background-color: rgb(231,231,231);
         padding:20px 0 0 0;
@@ -231,16 +423,6 @@
         content:"";
         display: block;
         clear: both;
-    }
-
-    #galContent h2.shapeTitle {
-        margin:0;
-        padding:0px 30px 0px 20px;
-        font-size: 1.5rem;
-        color:#555;
-        background-color: rgb(231,231,231);
-        border-bottom: 2px solid #888;
-        display: inline-block;
     }
 
     #galContent #posts .post {
@@ -319,17 +501,27 @@
         background-size: 20px 20px;
     }
 
+/*________________________
+    RESPONSIVNESS       */
+
 @media screen and (max-width: 799px) {
-    #galContent #posts .post, #posts .post img {
+    #galContent #posts .post, #posts .post .imgLink img {
         width: 150px;
         height: 150px;
     }
 }
 
-@media screen and (max-width: 359px) {
-    #galContent #posts .post, #posts .post img {
+@media screen and (max-width: 420px) {
+    #galContent #posts .post, #posts .post .imgLink img {
         width: 130px;
         height: 130px;
+    }
+    #posts .post .imgLink {
+        float:none;
+        margin:auto;
+        padding:10px 0 0 0;
+        display: block;
+        width: 130px;
     }
 }
 

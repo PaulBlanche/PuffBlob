@@ -4,5 +4,25 @@
         <span>puffblob<span>
     </a>
 </h1>
-    <div class="clear"></div>
-
+<div id="navig">
+    <h2><img src="tpl/img/logo-w.svg"/><a href="?" id="logo">My PuffBlob</a></h2>
+    <div id="admin">
+    {if="login::isLoggedIn()"}
+        <a href="?addpost" id="addpost"><img src="tpl/img/addpost.png" width="16" height="16" /><span>Add Post</span></a>
+        <a href="?logout" id="logout"><img src="tpl/img/logout.png" width="16" height="16" /><span>Logout</span></a>
+        <span id="config"><img src="tpl/img/config.png" width="16" height="16" /><span>Config</span>
+        <ul id='configMenu'>
+            <li><a href="?config=editshape">Shape Management</a></li>
+            <li><a href="?config=changepwd">Change Password</a></li>
+        </ul>
+        </a>
+    {else}
+        <a href="?login" id="logout"><img src="tpl/img/login.png" width="16" height="16" /><span>Login</span></a>
+    {/if}
+    </div><br />
+    <div id="shapes">
+    {loop="allShapes"}
+        <a href="?shape={$value}">{$value}</a>
+    {/loop}
+    </div>
+</div>

@@ -874,7 +874,7 @@ class ipBan {
         return true; // User is not banned.
     }
 
-    private function writeBanFile($ipban) {
+    static function writeBanFile($ipban) {
         $varExport = var_export($ipban, true);
         $content = "<?php\n\$GLOBALS['IPBANS']=".$varExport.";\n?>";
         file_put_contents($GLOBALS['config']['IPBANS_FILENAME'], $content);
@@ -946,7 +946,6 @@ class image {
     }
 }
 
-
 class config {
 
     static public function route($pageBuilder, $posts) {
@@ -1016,6 +1015,7 @@ class config {
         $config .= '$GLOBALS["disable_session_protection"] = false'.";\n";
         $config .= '$GLOBALS["config"]["display"] = '.var_export($GLOBALS['config']['display'], true).";\n";
         $config .= '$GLOBALS["config"]["defaultDisplay"] = "blog"'.";\n";
+        $config .= '$GLOBALS["mime"] ='.var_export($GLOBALS['mime'], true).";\n";
         $config .= "?>";
 
         file_put_contents($GLOBALS['config']['CONF_FILE'], $config);
@@ -1155,6 +1155,8 @@ class router {
         if(!file_exists('tpl/disp.'.$reqDisplay.".html")) {
             $reqDisplay = $GLOBALS["config"]['defaultDisplay'];
         }
+        $this->pageBuilder->assign('allTags', $this->posts->allTags());
+        $this->pageBuilder->assign('allShapes', $this->posts->allShapes());
         $this->pageBuilder->renderPage("disp.".$reqDisplay);
 
     }
@@ -1194,6 +1196,7 @@ class router {
         if(!ipBan::canLogin()) {
             die('Cannot haz authentification, you iz banned. shoo.');
         }
+
         if(login::check($_POST['password'], $_POST['login']) && token::checkToken($_POST['token'])) {
             ipBan::loginOK();
             $cookiedir = ''; 
@@ -1202,11 +1205,11 @@ class router {
             }
             session_set_cookie_params(0, $cookiedir, $_SERVER['HTTP_HOST']);
             session_regenerate_id(true);
-            header("Location: ?");
+            echo '<script>window.location.replace("?");</script>';
         }
         else {
             ipBan::loginFailed();
-            header("Location: ?login=0");
+            echo '<script>window.location.replace("?login=0");</script>';
         }
     }
 
@@ -1348,6 +1351,8 @@ class router {
         if($contentType === "file") {
             if($keepoldfile === "true") {
                 $fileURL = $oldfile;
+                $info = pathinfo($fileURL);
+                $ext = $info["extension"];
             } elseif ($file !== "") {
                 if ($file["error"]) {
                     echo $GLOBALS["UPLOAD_ERROR"][$file["error"]];

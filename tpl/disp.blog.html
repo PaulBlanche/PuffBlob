@@ -10,10 +10,9 @@
 
 {include="page.pagination"}
 <div id="blogContent">
-    <h2 class="shapeTitle">Shape : {$shape}</h2>
     <div id="posts">
         {loop="posts"}
-        <div class="post {if="$value.meta.contentLength > 1000"}long{/if}">
+        <div class="post{if="$value.meta.contentLength > 1000"} long{/if}{if="$counter%2 === 1"} odd{/if}">
             {if="login::isLoggedIn()"}
             <div class="linkeditbuttons">
                 <form method="GET" class="buttoneditform">
@@ -27,16 +26,32 @@
                 </form>
             </div>
             {/if}
-            <h1 class="title">{$value.title ? $value.title : "Sans titre"}</h1>
-            <span class="date">{$value.date|formatDate:'l j F Y \à H:i'}{if="login::isLoggedIn()"} ({$value.privacy}){/if}</span>
             {if="$value.meta.contentType==='text'"}
-                <div class="content">{$value.content}</div>
+            <h1 class="title">{$value.title ? $value.title : "Sans titre"}</h1>
+            <div class="content">
+                {$value.content}
+            </div>
             {elseif="$value.meta.contentType==='url'"}
-                <div class="content"><a class="contentlink" href="{$value.content}">{$value.content}</a>{$value.description}</div>
+            <h1 class="title"><a href="{$value.content}">{$value.title ? $value.title : "Sans titre"}</a></h1>
+            <div class="content">
+                {$value.description}
+            </div>
             {else}
-                <div class="content"><a class="contentlink" href="?file={$value.date}" >{$value.meta.filename}</a>{$value.description}</div>
+                {if="isType($value.meta.mimeType, 'image')"}
+                <a href="{$value.file}" class="imgLink"><img src="{$value.file|thumbULR}" /></a>
+                <h1 class="title"><a href="{$value.file}">{$value.title ? $value.title : "Sans titre"}</a></h1>
+                <div class="content">
+                    {$value.description}
+                </div>
+                {else}
+                <h1 class="title"><a href="?file={$value.date}">{$value.title ? $value.title : "Sans titre"}</a></h1>
+                <div class="content">
+                    <a class="contentlink" href="?file={$value.date}" >{$value.meta.filename}</a>{$value.description}
+                </div>
+                {/if}
             {/if}
-            <span class="tags"> Tags : 
+            <span class="date">{$value.date|formatDate:'l j F Y \à H:i'}{if="login::isLoggedIn()"} ({$value.privacy}){/if}</span>
+            <span class="tags">
             {loop="$value.meta.tags"}
                 <span>{$value}</span>
             {/loop}
